@@ -164,7 +164,7 @@ try:
 except FileNotFoundError:
     rnc_model = None
 if rnc_model is None:
-    rnc_model = neighbors.RadiusNeighborsClassifier()
+    rnc_model = neighbors.RadiusNeighborsClassifier(radius=3.0)
 rnc_model.fit(Train_X_Tfidf, Train_Y_Set)
 predictions_RNC = knn_model.predict(Test_X_Tfidf)
 # for a in predictions_RNC:
