@@ -21,17 +21,20 @@ Test_X_Tfidf = None
 unlabeled = None
 fitTrainModel = True
 probaPredict = False
+isVerbose = False
 
-def prepare(corpus: DataFrame, write_corpus=True, fit_corpus=True, fit_train_model=True, proba=False):
+
+def prepare(corpus: DataFrame, write_corpus=True, fit_corpus=True, fit_train_model=True, proba=False, verbose=False):
     global Train_X, Test_X, Train_Y, Test_Y, Train_Y_Encoded, Test_Y_Encoded, Train_X_Tfidf, Test_X_Tfidf, unlabeled, \
-        fitTrainModel, probaPredict
+        fitTrainModel, probaPredict, isVerbose
     fitTrainModel = fit_train_model
     probaPredict = proba
-    print('Preparing train and test data sets...')
+    isVerbose = verbose
+    vprint('Preparing train and test data sets...')
     test_size = 0.25 if fitTrainModel else corpus['text_final'].size - 1
     Train_X, Test_X, Train_Y, Test_Y = model_selection.train_test_split(corpus['text_final'], corpus['category'],
                                                                         test_size=test_size)
-    print('Encoding labels...')
+    vprint('Encoding labels...')
 
     Train_Y_Encoded = Encoder.fit_transform(Train_Y)
     Test_Y_Encoded = Encoder.fit_transform(Test_Y)
@@ -137,7 +140,7 @@ def prepare(corpus: DataFrame, write_corpus=True, fit_corpus=True, fit_train_mod
 
 def test_mnb():
     global fitTrainModel
-    print('Classify dataset using Naive Bayes...')
+    vprint('Classify dataset using Naive Bayes...', isVerbose)
     try:
         mnb_model = joblib.load(MNB_FILENAME)
     except FileNotFoundError:
@@ -154,21 +157,21 @@ def test_mnb():
     accuracy = metrics.accuracy_score(y_pred=predictions_NB, y_true=Test_Y) * 100
     precision = metrics.precision_score(y_pred=predictions_NB, y_true=Test_Y, average='macro') * 100
     recall = metrics.recall_score(y_pred=predictions_NB, y_true=Test_Y, average='macro') * 100
-    print("Naive Bayes Accuracy Score -> ", f'{accuracy:.2f}%')
-    print("Recall -> ", f'{recall:.2f}%')
-    print("Precision -> ", f'{precision:.2f}%')
+    vprint("Naive Bayes Accuracy Score -> ", f'{accuracy:.2f}%')
+    vprint("Recall -> ", f'{recall:.2f}%')
+    vprint("Precision -> ", f'{precision:.2f}%')
     if probaPredict:
         c = mnb_model.predict_proba(unlabeled)
-        print(c)
+        vprint(c)
         arr = np.array(c[3])
         d = Encoder.inverse_transform(arr.argsort()[::-1][:3])
-        print(d)
+        vprint(d)
         return d
     else:
         c = mnb_model.predict(unlabeled)
         d = Encoder.transform(c)
-        print(c)
-        print(d)
+        vprint(c)
+        vprint(d)
         return d
     # Classifier - Algorithm - SVM
     # fit the training dataset on the classifier
@@ -176,7 +179,7 @@ def test_mnb():
 
 def test_svm():
     global fitTrainModel
-    print('Classify dataset using SVM...')
+    vprint('Classify dataset using SVM...')
     try:
         svm_model = joblib.load(SVM_FILENAME)
     except FileNotFoundError:
@@ -193,27 +196,27 @@ def test_svm():
     accuracy2 = metrics.accuracy_score(y_pred=predictions_SVM, y_true=Test_Y) * 100
     precision2 = metrics.precision_score(y_pred=predictions_SVM, y_true=Test_Y, average='macro') * 100
     recall2 = metrics.recall_score(y_pred=predictions_SVM, y_true=Test_Y, average='macro') * 100
-    print("SVM Accuracy Score -> ", f'{accuracy2:.2f}%')
-    print("Recall -> ", f'{recall2:.2f}%')
-    print("Precision -> ", f'{precision2:.2f}%')
+    vprint("SVM Accuracy Score -> ", f'{accuracy2:.2f}%')
+    vprint("Recall -> ", f'{recall2:.2f}%')
+    vprint("Precision -> ", f'{precision2:.2f}%')
     if probaPredict:
         c = svm_model.predict_proba(unlabeled)
-        print(c)
+        vprint(c)
         arr = np.array(c[3])
         d = Encoder.inverse_transform(arr.argsort()[::-1][:3])
-        print(d)
+        vprint(d)
         return d
     else:
         c = svm_model.predict(unlabeled)
         d = Encoder.transform(c)
-        print(c)
-        print(d)
+        vprint(c)
+        vprint(d)
         return d
 
 
 def test_mlp():
     global fitTrainModel
-    print('Classify dataset using MLP...')
+    vprint('Classify dataset using MLP...')
     try:
         mlp_model = joblib.load(MLP_FILENAME)
     except FileNotFoundError:
@@ -229,20 +232,24 @@ def test_mlp():
     accuracy3 = metrics.accuracy_score(y_pred=predictions_MLP, y_true=Test_Y) * 100
     precision3 = metrics.precision_score(y_pred=predictions_MLP, y_true=Test_Y, average='macro') * 100
     recall3 = metrics.recall_score(y_pred=predictions_MLP, y_true=Test_Y, average='macro') * 100
-    print("MLP Accuracy Score -> ", f'{accuracy3:.2f}%')
-    print("Recall -> ", f'{recall3:.2f}%')
-    print("Precision -> ", f'{precision3:.2f}%')
+    vprint("MLP Accuracy Score -> ", f'{accuracy3:.2f}%')
+    vprint("Recall -> ", f'{recall3:.2f}%')
+    vprint("Precision -> ", f'{precision3:.2f}%')
     if probaPredict:
         c = mlp_model.predict_proba(unlabeled)
-        print(c)
+        vprint(c)
         arr = np.array(c[3])
         d = Encoder.inverse_transform(arr.argsort()[::-1][:3])
-        print(d)
+        vprint(d)
         return d
     else:
         c = mlp_model.predict(unlabeled)
         d = Encoder.transform(c)
-        print(c)
-        print(d)
+        vprint(c)
+        vprint(d)
         return d
 
+
+def vprint(data):
+    if isVerbose:
+        print(data)
