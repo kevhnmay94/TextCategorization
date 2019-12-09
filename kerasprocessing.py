@@ -125,6 +125,6 @@ def exec(corpus: DataFrame, write_corpus=True, fit_corpus=True, fit_train_model=
             lab.append(text_labels[a])
         vprint(lab)
 
-def vprint(data):
+def vprint(*data):
     if isVerbose:
-        print(data)
+        print(*data)

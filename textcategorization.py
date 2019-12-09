@@ -23,9 +23,9 @@ useKeras = False
 verbose = False
 
 
-def vprint(data):
+def vprint(*data):
     if verbose:
-        print(data)
+        print(*data)
 
 
 for s in sys.argv:

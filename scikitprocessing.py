@@ -140,7 +140,7 @@ def prepare(corpus: DataFrame, write_corpus=True, fit_corpus=True, fit_train_mod
 
 def test_mnb():
     global fitTrainModel
-    vprint('Classify dataset using Naive Bayes...', isVerbose)
+    vprint('Classify dataset using Naive Bayes...')
     try:
         mnb_model = joblib.load(MNB_FILENAME)
     except FileNotFoundError:
@@ -250,6 +250,6 @@ def test_mlp():
         return d
 
 
-def vprint(data):
+def vprint(*data):
     if isVerbose:
-        print(data)
+        print(*data)
