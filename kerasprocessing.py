@@ -1,7 +1,5 @@
-import pandas as pd
 import numpy as np
-from sklearn.preprocessing import LabelBinarizer, LabelEncoder
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import LabelBinarizer
 from sklearn import model_selection
 from pandas import DataFrame
 import tensorflow as tf

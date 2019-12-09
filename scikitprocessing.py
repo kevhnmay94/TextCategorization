@@ -60,7 +60,40 @@ def prepare(corpus: DataFrame, path, write_corpus=True, fit_corpus=True, fit_tra
         unlabeled = Tfidf_vect.transform([new_data])
     else:
         unlabeled = Tfidf_vect.transform(
-            ['The alert follows last week’s warning from a UN-appointed independent rights expert that the country – once '
+            ['As August says good-bye to the dog days of summer and turns its weary head toward Labor Day, cable company '
+             'call centers light up with callers requesting the RedZone channel. By now, this is hardly surprising. Each '
+             'year that the NFL preseason approaches its zenith, a staggering 50 million players get ready to do their '
+             'fantasy football drafts. The internet is flooded by fantasy football fever, with draft guides and strategy '
+             'blogs fighting for their share of the click deluge. If you work at a company with more than a dozen people, '
+             'it is virtually certain that someone in your office is playing fantasy football. During the NFL season, '
+             'more people play fantasy than go to the gym, the movies, or music concerts. So even if you’re not a player '
+             'or fan, there is no denying that fantasy football has become part of the cultural narrative. The '
+             'interesting bit is that this game, which takes a staggering share of post-Labor Day leisure time, '
+             'offers many surprising parallels with real-life business management. If you clicked on this article and '
+             'read this far, it’s likely that you already know how fantasy football works. On the off chance that your '
+             'knowledge is rusty, here is a short description: in fantasy football, you join a league, typically with '
+             'friends or work colleagues. The league is set up and managed using a fantasy football app (CBS Sports and '
+             'Yahoo are two of the most popular). At some point before the NFL regular season starts, you and the other '
+             '“coaches” in the league will agree on a date to conduct a draft. The draft is done online using the fantasy '
+             'football app, meaning you don’t have to be in the same room with everyone else in your league. The purpose '
+             'of the draft is to select real-life NFL players to play on your fantasy team. Once you have drafted a '
+             'player, that player is not available for any other team. There are two draft types. With a snake draft, '
+             'all the coaches in your league draft based on a pre-set order. The person who drafts last in the first '
+             'round gets to draft first in the second round, and so forth. With an auction draft, all the coaches in your '
+             'league get a pre-set budget and can bid on players. Whoever bids the highest gets the player, but then has '
+             'correspondingly less budget left for future bids. Once everyone has a full team the draft closes. '
+             'Typically, a team is comprised of ten starters that include a quarterback, two running backs, three wide '
+             'receivers, a tight end, a flex position, a kicker, and a defense. In addition, there are six bench spots '
+             'for backup players that can include any of the above positions. Some leagues use either more or fewer '
+             'starting positions, but they generally hew close to this general guideline. During the first 13 weeks of '
+             'the NFL regular season, each team will go head-to-head against another team in your league. The fantasy '
+             'football app you use will automatically calculate the real-life performance of each player on your team. '
+             'The scores put up by each player are added together to give you an overall team score. If your team puts up '
+             'more points in any given week than the team you are playing against then you get a win. Otherwise, '
+             'you get a loss. At the end of the period, the teams with the best win/loss records go to the fantasy '
+             'playoffs and, when all is said and done, the top three teams generally split a pot of winnings based on '
+             'league fees.',
+             'The alert follows last week’s warning from a UN-appointed independent rights expert that the country – once '
              'seen as the breadbasket of Africa - is in the grip of “man-made starvation”. In Geneva, WFP spokesperson '
              'Bettina Luescher said that almost $300 million was needed urgently to supply some 240,000 tonnes of aid. “A '
              'climate disaster” and “economic meltdown” were to blame for the ongoing crisis, she explained, with normal '
@@ -109,39 +142,7 @@ def prepare(corpus: DataFrame, path, write_corpus=True, fit_corpus=True, fit_tra
              'a cybersecurity project, debuted with considerable fanfare as an independent Alphabet business last year -- '
              'only to be subsumed into Google’s cloud division in June. Fiber, once a high-profile Other Bet, '
              'is no longer expanding.',
-             'As August says good-bye to the dog days of summer and turns its weary head toward Labor Day, cable company '
-             'call centers light up with callers requesting the RedZone channel. By now, this is hardly surprising. Each '
-             'year that the NFL preseason approaches its zenith, a staggering 50 million players get ready to do their '
-             'fantasy football drafts. The internet is flooded by fantasy football fever, with draft guides and strategy '
-             'blogs fighting for their share of the click deluge. If you work at a company with more than a dozen people, '
-             'it is virtually certain that someone in your office is playing fantasy football. During the NFL season, '
-             'more people play fantasy than go to the gym, the movies, or music concerts. So even if you’re not a player '
-             'or fan, there is no denying that fantasy football has become part of the cultural narrative. The '
-             'interesting bit is that this game, which takes a staggering share of post-Labor Day leisure time, '
-             'offers many surprising parallels with real-life business management. If you clicked on this article and '
-             'read this far, it’s likely that you already know how fantasy football works. On the off chance that your '
-             'knowledge is rusty, here is a short description: in fantasy football, you join a league, typically with '
-             'friends or work colleagues. The league is set up and managed using a fantasy football app (CBS Sports and '
-             'Yahoo are two of the most popular). At some point before the NFL regular season starts, you and the other '
-             '“coaches” in the league will agree on a date to conduct a draft. The draft is done online using the fantasy '
-             'football app, meaning you don’t have to be in the same room with everyone else in your league. The purpose '
-             'of the draft is to select real-life NFL players to play on your fantasy team. Once you have drafted a '
-             'player, that player is not available for any other team. There are two draft types. With a snake draft, '
-             'all the coaches in your league draft based on a pre-set order. The person who drafts last in the first '
-             'round gets to draft first in the second round, and so forth. With an auction draft, all the coaches in your '
-             'league get a pre-set budget and can bid on players. Whoever bids the highest gets the player, but then has '
-             'correspondingly less budget left for future bids. Once everyone has a full team the draft closes. '
-             'Typically, a team is comprised of ten starters that include a quarterback, two running backs, three wide '
-             'receivers, a tight end, a flex position, a kicker, and a defense. In addition, there are six bench spots '
-             'for backup players that can include any of the above positions. Some leagues use either more or fewer '
-             'starting positions, but they generally hew close to this general guideline. During the first 13 weeks of '
-             'the NFL regular season, each team will go head-to-head against another team in your league. The fantasy '
-             'football app you use will automatically calculate the real-life performance of each player on your team. '
-             'The scores put up by each player are added together to give you an overall team score. If your team puts up '
-             'more points in any given week than the team you are playing against then you get a win. Otherwise, '
-             'you get a loss. At the end of the period, the teams with the best win/loss records go to the fantasy '
-             'playoffs and, when all is said and done, the top three teams generally split a pot of winnings based on '
-             'league fees.'])
+             ])
 
 
 def test_mnb():
@@ -157,15 +158,15 @@ def test_mnb():
     if fitTrainModel:
         mnb_model.fit(Train_X_Tfidf, Train_Y)
         joblib.dump(mnb_model, MNB_FILENAME, compress=9)
-    predictions_NB = mnb_model.predict(Test_X_Tfidf)
-    # print(predictions_NB)
-    # print(Test_Y)
-    accuracy = metrics.accuracy_score(y_pred=predictions_NB, y_true=Test_Y) * 100
-    precision = metrics.precision_score(y_pred=predictions_NB, y_true=Test_Y, average='macro') * 100
-    recall = metrics.recall_score(y_pred=predictions_NB, y_true=Test_Y, average='macro') * 100
-    vprint("Naive Bayes Accuracy Score -> ", f'{accuracy:.2f}%')
-    vprint("Recall -> ", f'{recall:.2f}%')
-    vprint("Precision -> ", f'{precision:.2f}%')
+        predictions_NB = mnb_model.predict(Test_X_Tfidf)
+        # print(predictions_NB)
+        # print(Test_Y)
+        accuracy = metrics.accuracy_score(y_pred=predictions_NB, y_true=Test_Y) * 100
+        precision = metrics.precision_score(y_pred=predictions_NB, y_true=Test_Y, average='macro') * 100
+        recall = metrics.recall_score(y_pred=predictions_NB, y_true=Test_Y, average='macro') * 100
+        vprint("Naive Bayes Accuracy Score -> ", f'{accuracy:.2f}%')
+        vprint("Recall -> ", f'{recall:.2f}%')
+        vprint("Precision -> ", f'{precision:.2f}%')
     if probaPredict:
         c = mnb_model.predict_proba(unlabeled)
         vprint(c)
@@ -175,10 +176,8 @@ def test_mnb():
         return d
     else:
         c = mnb_model.predict(unlabeled)
-        d = Encoder.transform(c)
-        vprint(c)
-        vprint(d)
-        return d
+        vprint(c[0])
+        return c[0]
 
 
 def test_svm():
@@ -194,15 +193,15 @@ def test_svm():
     if fitTrainModel:
         svm_model.fit(Train_X_Tfidf, Train_Y)
         joblib.dump(svm_model, SVM_FILENAME, compress=9)
-    predictions_SVM = svm_model.predict(Test_X_Tfidf)
-    # print(predictions_SVM)
-    # print(Test_Y)
-    accuracy2 = metrics.accuracy_score(y_pred=predictions_SVM, y_true=Test_Y) * 100
-    precision2 = metrics.precision_score(y_pred=predictions_SVM, y_true=Test_Y, average='macro') * 100
-    recall2 = metrics.recall_score(y_pred=predictions_SVM, y_true=Test_Y, average='macro') * 100
-    vprint("SVM Accuracy Score -> ", f'{accuracy2:.2f}%')
-    vprint("Recall -> ", f'{recall2:.2f}%')
-    vprint("Precision -> ", f'{precision2:.2f}%')
+        predictions_SVM = svm_model.predict_proba(Test_X_Tfidf)
+        # print(predictions_SVM)
+        # print(Test_Y)
+        accuracy2 = metrics.accuracy_score(y_pred=predictions_SVM, y_true=Test_Y) * 100
+        precision2 = metrics.precision_score(y_pred=predictions_SVM, y_true=Test_Y, average='macro') * 100
+        recall2 = metrics.recall_score(y_pred=predictions_SVM, y_true=Test_Y, average='macro') * 100
+        vprint("SVM Accuracy Score -> ", f'{accuracy2:.2f}%')
+        vprint("Recall -> ", f'{recall2:.2f}%')
+        vprint("Precision -> ", f'{precision2:.2f}%')
     if probaPredict:
         c = svm_model.predict_proba(unlabeled)
         vprint(c)
@@ -212,10 +211,8 @@ def test_svm():
         return d
     else:
         c = svm_model.predict(unlabeled)
-        d = Encoder.transform(c)
-        vprint(c)
-        vprint(d)
-        return d
+        vprint(c[0])
+        return c[0]
 
 
 def test_mlp():
@@ -232,26 +229,24 @@ def test_mlp():
     if fitTrainModel:
         mlp_model.partial_fit(Train_X_Tfidf, Train_Y)
         joblib.dump(mlp_model, MLP_FILENAME, compress=9)
-    predictions_MLP = mlp_model.predict(Test_X_Tfidf)
-    accuracy3 = metrics.accuracy_score(y_pred=predictions_MLP, y_true=Test_Y) * 100
-    precision3 = metrics.precision_score(y_pred=predictions_MLP, y_true=Test_Y, average='macro') * 100
-    recall3 = metrics.recall_score(y_pred=predictions_MLP, y_true=Test_Y, average='macro') * 100
-    vprint("MLP Accuracy Score -> ", f'{accuracy3:.2f}%')
-    vprint("Recall -> ", f'{recall3:.2f}%')
-    vprint("Precision -> ", f'{precision3:.2f}%')
+        predictions_MLP = mlp_model.predict(Test_X_Tfidf)
+        accuracy3 = metrics.accuracy_score(y_pred=predictions_MLP, y_true=Test_Y) * 100
+        precision3 = metrics.precision_score(y_pred=predictions_MLP, y_true=Test_Y, average='macro') * 100
+        recall3 = metrics.recall_score(y_pred=predictions_MLP, y_true=Test_Y, average='macro') * 100
+        vprint("MLP Accuracy Score -> ", f'{accuracy3:.2f}%')
+        vprint("Recall -> ", f'{recall3:.2f}%')
+        vprint("Precision -> ", f'{precision3:.2f}%')
     if probaPredict:
         c = mlp_model.predict_proba(unlabeled)
         vprint(c)
-        arr = np.array(c[3])
+        arr = np.array(c[0])
         d = Encoder.inverse_transform(arr.argsort()[::-1][:3])
         vprint(d)
         return d
     else:
         c = mlp_model.predict(unlabeled)
-        d = Encoder.transform(c)
-        vprint(c)
-        vprint(d)
-        return d
+        vprint(c[0])
+        return c[0]
 
 
 def vprint(*data):

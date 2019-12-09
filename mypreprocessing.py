@@ -14,14 +14,14 @@ isVerbose = False
 np.random.seed()
 
 
-def write_corpus(path,fix_contractions=False,verbose=False):
+def write_corpus(path, fix_contractions=False, verbose=False):
     global isVerbose
     isVerbose = verbose
     nltk.download('punkt')
     nltk.download('wordnet')
     nltk.download('averaged_perceptron_tagger')
     nltk.download('stopwords')
-    corpus = pd.read_csv(path+"dataset-all.csv")
+    corpus = pd.read_csv(path + "dataset-all.csv")
     corpus['text'] = corpus['headline'] + " " + corpus["content"]
     corpus['text'].dropna(inplace=True)
     corpus['text'] = [entry.lower() for entry in corpus['text']]
@@ -49,8 +49,9 @@ def write_corpus(path,fix_contractions=False,verbose=False):
         corpus.loc[index, 'text_final'] = str(Final_words)
 
     corpus = corpus.loc[:, ['category', 'text_final']]
-    corpus.to_csv(path+'dataset_final.csv')
+    corpus.to_csv(path + 'dataset_final.csv')
     return corpus
+
 
 def vprint(*data):
     if isVerbose:

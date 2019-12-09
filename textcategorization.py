@@ -15,16 +15,18 @@ SVM_FILENAME = path + 'svm_classifier.pkl'
 MLP_FILENAME = path + 'mlp_classifier.pkl'
 CORPUS_VECTOR = path + 'tfidf_vector.pkl'
 trainMode = False
-fitCorpus = True
-fitTrainModel = True
+fitCorpus = False
+fitTrainModel = False
 writeCorpus = False
 useScikit = True
 useScikitMNB = False
 useScikitSVM = False
 useScikitMLP = True
 useKeras = False
-verbose = True
+verbose = False
 test_str = None
+probaResult = True
+
 
 def vprint(*data):
     if verbose:
@@ -46,6 +48,10 @@ for s in sys.argv[1:-2]:
             useKeras = True
         elif arg == 'no-keras':
             useKeras = False
+        elif arg == 'proba':
+            probaResult = True
+        elif arg == 'no-proba':
+            probaResult = False
         if useScikit:
             if arg == 'mlp':
                 useScikitMLP = True
@@ -129,17 +135,18 @@ if writeCorpus:
     corpus = None
 else:
     try:
-        corpus = pd.read_csv(path+"dataset_final.csv")
+        corpus = pd.read_csv(path + "dataset_final.csv")
     except FileNotFoundError:
         corpus = None
 if corpus is None or writeCorpus:
     writeCorpus = True
     fitTrainModel = True
-    corpus = mypreprocessing.write_corpus(path,fix_contractions=False)
+    corpus = mypreprocessing.write_corpus(path, fix_contractions=False)
 
 if useScikit:
-    scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus, fit_train_model=fitTrainModel,
-                             proba=True, verbose=verbose, new_data=test_str)
+    scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
+                             fit_train_model=fitTrainModel,
+                             proba=probaResult, verbose=verbose, new_data=test_str)
     if useScikitMNB:
         result = scikitprocessing.test_mnb()
     if useScikitSVM:
