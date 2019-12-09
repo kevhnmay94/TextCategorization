@@ -15,23 +15,25 @@ KERAS_FILENAME = 'keras_classifier.pkl'
 Encoder = LabelBinarizer()
 unlabeled = None
 fitTrainModel = True
+isVerbose = False
 
-
-def exec(corpus: DataFrame, write_corpus=True, fit_corpus=True, fit_train_model=True):
+def exec(corpus: DataFrame, write_corpus=True, fit_corpus=True, fit_train_model=True, verbose=False):
+    global isVerbose
+    isVerbose = verbose
     np.random.seed(420)
     global fitTrainModel
     fitTrainModel = fit_train_model
     word_size = 5000
     labels = corpus['category'].unique()
     num_labels = len(labels)
-    print('Preparing train and test data sets...')
+    vprint('Preparing train and test data sets...')
     test_size = 0.25 if fitTrainModel else corpus['text_final'].size - 1
     Train_X, Test_X, Train_Y, Test_Y = model_selection.train_test_split(corpus['text_final'], corpus['category'],
                                                                         test_size=test_size)
-    print('Encoding labels...')
+    vprint('Encoding labels...')
     Train_Y_Encoded = Encoder.fit_transform(Train_Y)
     Test_Y_Encoded = Encoder.fit_transform(Test_Y)
-    print(Train_Y_Encoded)
+    vprint(Train_Y_Encoded)
 
     if write_corpus is True:
         tokenizer = None
@@ -93,7 +95,7 @@ def exec(corpus: DataFrame, write_corpus=True, fit_corpus=True, fit_train_model=
     except:
         import sys
         e = sys.exc_info()
-        print(e)
+        vprint(e)
         exit(1)
     if model is None:
         model = tf.keras.Sequential()
@@ -112,13 +114,17 @@ def exec(corpus: DataFrame, write_corpus=True, fit_corpus=True, fit_train_model=
     score = model.evaluate(Test_X_Tfidf, Test_Y_Encoded, batch_size=10)
     prediction1 = model.predict(Test_X_Tfidf)
     for i in range(0, 10):
-        print(text_labels[np.argmax(prediction1[i])], Test_Y.iloc[i])
+        vprint(text_labels[np.argmax(prediction1[i])], Test_Y.iloc[i])
     for u in unlabeled:
         prediction = model.predict(np.array([u]))
-        print(text_labels)
-        print(prediction)
+        vprint(text_labels)
+        vprint(prediction)
         arr = np.argsort(prediction[0])[::-1][:3]
         lab = []
         for a in arr:
             lab.append(text_labels[a])
-        print(lab)
+        vprint(lab)
+
+def vprint(data):
+    if isVerbose:
+        print(data)
