@@ -21,11 +21,14 @@ unlabeled = None
 fitTrainModel = True
 probaPredict = False
 isVerbose = False
+corpus = None
+partialTrain = True
 
 
-def prepare(corpus: DataFrame, path, write_corpus=True, fit_corpus=True, fit_train_model=True, proba=False, verbose=False, new_data = None):
+def prepare(corpus_input: DataFrame, path, write_corpus=True, fit_corpus=True, fit_train_model=True, proba=False, partial=True, verbose=False, new_data = None):
     global Train_X, Test_X, Train_Y, Test_Y, Train_Y_Encoded, Test_Y_Encoded, Train_X_Tfidf, Test_X_Tfidf, unlabeled, \
-        fitTrainModel, probaPredict, isVerbose, CORPUS_VECTOR, MNB_FILENAME, MLP_FILENAME, SVM_FILENAME
+        fitTrainModel, probaPredict, isVerbose, CORPUS_VECTOR, MNB_FILENAME, MLP_FILENAME, SVM_FILENAME, corpus, partialTrain
+    corpus = corpus_input
     CORPUS_VECTOR = path + CORPUS_VECTOR
     MNB_FILENAME = path + MNB_FILENAME
     SVM_FILENAME = path + SVM_FILENAME
@@ -33,6 +36,7 @@ def prepare(corpus: DataFrame, path, write_corpus=True, fit_corpus=True, fit_tra
     fitTrainModel = fit_train_model
     probaPredict = proba
     isVerbose = verbose
+    partialTrain = partial
     vprint('Preparing train and test data sets...')
     test_size = 0.25 if fitTrainModel else corpus['text_final'].size - 1
     Train_X, Test_X, Train_Y, Test_Y = model_selection.train_test_split(corpus['text_final'], corpus['category'],
@@ -41,6 +45,7 @@ def prepare(corpus: DataFrame, path, write_corpus=True, fit_corpus=True, fit_tra
 
     Train_Y_Encoded = Encoder.fit_transform(Train_Y)
     Test_Y_Encoded = Encoder.fit_transform(Test_Y)
+    vprint(CORPUS_VECTOR)
     if write_corpus is True:
         Tfidf_vect = None
     else:
@@ -60,64 +65,65 @@ def prepare(corpus: DataFrame, path, write_corpus=True, fit_corpus=True, fit_tra
         unlabeled = Tfidf_vect.transform([new_data])
     else:
         unlabeled = Tfidf_vect.transform(
-            ['As August says good-bye to the dog days of summer and turns its weary head toward Labor Day, cable company '
-             'call centers light up with callers requesting the RedZone channel. By now, this is hardly surprising. Each '
-             'year that the NFL preseason approaches its zenith, a staggering 50 million players get ready to do their '
-             'fantasy football drafts. The internet is flooded by fantasy football fever, with draft guides and strategy '
-             'blogs fighting for their share of the click deluge. If you work at a company with more than a dozen people, '
-             'it is virtually certain that someone in your office is playing fantasy football. During the NFL season, '
-             'more people play fantasy than go to the gym, the movies, or music concerts. So even if you’re not a player '
-             'or fan, there is no denying that fantasy football has become part of the cultural narrative. The '
-             'interesting bit is that this game, which takes a staggering share of post-Labor Day leisure time, '
-             'offers many surprising parallels with real-life business management. If you clicked on this article and '
-             'read this far, it’s likely that you already know how fantasy football works. On the off chance that your '
-             'knowledge is rusty, here is a short description: in fantasy football, you join a league, typically with '
-             'friends or work colleagues. The league is set up and managed using a fantasy football app (CBS Sports and '
-             'Yahoo are two of the most popular). At some point before the NFL regular season starts, you and the other '
-             '“coaches” in the league will agree on a date to conduct a draft. The draft is done online using the fantasy '
-             'football app, meaning you don’t have to be in the same room with everyone else in your league. The purpose '
-             'of the draft is to select real-life NFL players to play on your fantasy team. Once you have drafted a '
-             'player, that player is not available for any other team. There are two draft types. With a snake draft, '
-             'all the coaches in your league draft based on a pre-set order. The person who drafts last in the first '
-             'round gets to draft first in the second round, and so forth. With an auction draft, all the coaches in your '
-             'league get a pre-set budget and can bid on players. Whoever bids the highest gets the player, but then has '
-             'correspondingly less budget left for future bids. Once everyone has a full team the draft closes. '
-             'Typically, a team is comprised of ten starters that include a quarterback, two running backs, three wide '
-             'receivers, a tight end, a flex position, a kicker, and a defense. In addition, there are six bench spots '
-             'for backup players that can include any of the above positions. Some leagues use either more or fewer '
-             'starting positions, but they generally hew close to this general guideline. During the first 13 weeks of '
-             'the NFL regular season, each team will go head-to-head against another team in your league. The fantasy '
-             'football app you use will automatically calculate the real-life performance of each player on your team. '
-             'The scores put up by each player are added together to give you an overall team score. If your team puts up '
-             'more points in any given week than the team you are playing against then you get a win. Otherwise, '
-             'you get a loss. At the end of the period, the teams with the best win/loss records go to the fantasy '
-             'playoffs and, when all is said and done, the top three teams generally split a pot of winnings based on '
-             'league fees.',
-             'The alert follows last week’s warning from a UN-appointed independent rights expert that the country – once '
-             'seen as the breadbasket of Africa - is in the grip of “man-made starvation”. In Geneva, WFP spokesperson '
-             'Bettina Luescher said that almost $300 million was needed urgently to supply some 240,000 tonnes of aid. “A '
-             'climate disaster” and “economic meltdown” were to blame for the ongoing crisis, she explained, with normal '
-             'rainfall recorded in just one of the last five growing seasons. The increasingly unreliable rainy season '
-             'affects subsistence farmers in particular as they grow maize - a very water-intensive crop, and many of '
-             'these farmers are still recovering from the major 2014-16 El Nino-induced drought. In addition, “the crisis '
-             'is being exacerbated by a dire shortage of currency, runaway inflation, mounting unemployment, '
-             'lack of fuel, prolonged power outages and large-scale livestock losses, and they inflict the urban '
-             'population just as well as rural villagers,” Ms. Luescher said. In total, however, 5.5 million people in '
-             'the countryside and 2.2 million in urban areas need help, and acute malnutrition has risen to 3.6 per cent, '
-             'up from 2.5 per cent last year. ',
-             'Angelina Jolie tells daughters most attractive quality for women is '
-             'having their own opinions Angelina Jolie has revealed she’s bringing up '
-             'her daughters to recognise the importance of prioritising mental '
-             'development over their looks. Writing for Elle UK  in the publication’s '
-             'September issue, the actor argued that “there is nothing more '
-             'attractive—you might even say enchanting—than a woman with an '
-             'independent will and her own opinions”. Jolie continued: “I often tell '
-             'my daughters that the most important thing they can do is to develop '
-             'their minds. You can always put on a pretty dress, but it doesn’t '
-             'matter what you wear on the outside if your mind isn’t strong.” '
-             'Elsewhere in the essay, Jolie pontificates about the need for more '
-             '“wicked women” in the world, proceeding to challenge gender stereotypes '
-             'surrounding strong women. ',
+            [
+            # 'As August says good-bye to the dog days of summer and turns its weary head toward Labor Day, cable company '
+            #  'call centers light up with callers requesting the RedZone channel. By now, this is hardly surprising. Each '
+            #  'year that the NFL preseason approaches its zenith, a staggering 50 million players get ready to do their '
+            #  'fantasy football drafts. The internet is flooded by fantasy football fever, with draft guides and strategy '
+            #  'blogs fighting for their share of the click deluge. If you work at a company with more than a dozen people, '
+            #  'it is virtually certain that someone in your office is playing fantasy football. During the NFL season, '
+            #  'more people play fantasy than go to the gym, the movies, or music concerts. So even if you’re not a player '
+            #  'or fan, there is no denying that fantasy football has become part of the cultural narrative. The '
+            #  'interesting bit is that this game, which takes a staggering share of post-Labor Day leisure time, '
+            #  'offers many surprising parallels with real-life business management. If you clicked on this article and '
+            #  'read this far, it’s likely that you already know how fantasy football works. On the off chance that your '
+            #  'knowledge is rusty, here is a short description: in fantasy football, you join a league, typically with '
+            #  'friends or work colleagues. The league is set up and managed using a fantasy football app (CBS Sports and '
+            #  'Yahoo are two of the most popular). At some point before the NFL regular season starts, you and the other '
+            #  '“coaches” in the league will agree on a date to conduct a draft. The draft is done online using the fantasy '
+            #  'football app, meaning you don’t have to be in the same room with everyone else in your league. The purpose '
+            #  'of the draft is to select real-life NFL players to play on your fantasy team. Once you have drafted a '
+            #  'player, that player is not available for any other team. There are two draft types. With a snake draft, '
+            #  'all the coaches in your league draft based on a pre-set order. The person who drafts last in the first '
+            #  'round gets to draft first in the second round, and so forth. With an auction draft, all the coaches in your '
+            #  'league get a pre-set budget and can bid on players. Whoever bids the highest gets the player, but then has '
+            #  'correspondingly less budget left for future bids. Once everyone has a full team the draft closes. '
+            #  'Typically, a team is comprised of ten starters that include a quarterback, two running backs, three wide '
+            #  'receivers, a tight end, a flex position, a kicker, and a defense. In addition, there are six bench spots '
+            #  'for backup players that can include any of the above positions. Some leagues use either more or fewer '
+            #  'starting positions, but they generally hew close to this general guideline. During the first 13 weeks of '
+            #  'the NFL regular season, each team will go head-to-head against another team in your league. The fantasy '
+            #  'football app you use will automatically calculate the real-life performance of each player on your team. '
+            #  'The scores put up by each player are added together to give you an overall team score. If your team puts up '
+            #  'more points in any given week than the team you are playing against then you get a win. Otherwise, '
+            #  'you get a loss. At the end of the period, the teams with the best win/loss records go to the fantasy '
+            #  'playoffs and, when all is said and done, the top three teams generally split a pot of winnings based on '
+            #  'league fees.',
+            #  'The alert follows last week’s warning from a UN-appointed independent rights expert that the country – once '
+            #  'seen as the breadbasket of Africa - is in the grip of “man-made starvation”. In Geneva, WFP spokesperson '
+            #  'Bettina Luescher said that almost $300 million was needed urgently to supply some 240,000 tonnes of aid. “A '
+            #  'climate disaster” and “economic meltdown” were to blame for the ongoing crisis, she explained, with normal '
+            #  'rainfall recorded in just one of the last five growing seasons. The increasingly unreliable rainy season '
+            #  'affects subsistence farmers in particular as they grow maize - a very water-intensive crop, and many of '
+            #  'these farmers are still recovering from the major 2014-16 El Nino-induced drought. In addition, “the crisis '
+            #  'is being exacerbated by a dire shortage of currency, runaway inflation, mounting unemployment, '
+            #  'lack of fuel, prolonged power outages and large-scale livestock losses, and they inflict the urban '
+            #  'population just as well as rural villagers,” Ms. Luescher said. In total, however, 5.5 million people in '
+            #  'the countryside and 2.2 million in urban areas need help, and acute malnutrition has risen to 3.6 per cent, '
+            #  'up from 2.5 per cent last year. ',
+            #  'Angelina Jolie tells daughters most attractive quality for women is '
+            #  'having their own opinions Angelina Jolie has revealed she’s bringing up '
+            #  'her daughters to recognise the importance of prioritising mental '
+            #  'development over their looks. Writing for Elle UK  in the publication’s '
+            #  'September issue, the actor argued that “there is nothing more '
+            #  'attractive—you might even say enchanting—than a woman with an '
+            #  'independent will and her own opinions”. Jolie continued: “I often tell '
+            #  'my daughters that the most important thing they can do is to develop '
+            #  'their minds. You can always put on a pretty dress, but it doesn’t '
+            #  'matter what you wear on the outside if your mind isn’t strong.” '
+            #  'Elsewhere in the essay, Jolie pontificates about the need for more '
+            #  '“wicked women” in the world, proceeding to challenge gender stereotypes '
+            #  'surrounding strong women. ',
              'The Google founders’ decision to step down ends a multiyear effort to turn their company into the Berkshire '
              'Hathaway of technology by embracing Warren Buffett’s hands-off management style. Larry Page and Sergey Brin '
              'created the Alphabet Inc. holding company in 2015 to give themselves more time to invest in new tech '
@@ -216,7 +222,7 @@ def test_svm():
 
 
 def test_mlp():
-    global fitTrainModel
+    global fitTrainModel, partialTrain
     vprint('Classify dataset using MLP...')
     try:
         mlp_model = joblib.load(MLP_FILENAME)
@@ -225,9 +231,13 @@ def test_mlp():
     if mlp_model is None:
         mlp_model = multilayer_perceptron.MLPClassifier()
         fitTrainModel = True
+        partialTrain = False
     mlp_model.set_params(max_iter=400, solver='adam', hidden_layer_sizes=(500,))
     if fitTrainModel:
-        mlp_model.partial_fit(Train_X_Tfidf, Train_Y)
+        if partialTrain:
+            mlp_model.partial_fit(Train_X_Tfidf)
+        else:
+            mlp_model.fit(Train_X_Tfidf, Train_Y)
         joblib.dump(mlp_model, MLP_FILENAME, compress=9)
         predictions_MLP = mlp_model.predict(Test_X_Tfidf)
         accuracy3 = metrics.accuracy_score(y_pred=predictions_MLP, y_true=Test_Y) * 100
@@ -242,11 +252,19 @@ def test_mlp():
         arr = np.array(c[0])
         d = Encoder.inverse_transform(arr.argsort()[::-1][:3])
         vprint(d)
-        return d
+        c = mlp_model.predict(unlabeled)
+        mlp_model.partial_fit(unlabeled,c)
+        joblib.dump(mlp_model,MLP_FILENAME, compress=9)
+        x = [d.tolist(),c]
+        return x
     else:
         c = mlp_model.predict(unlabeled)
         vprint(c[0])
+        mlp_model.partial_fit(unlabeled,c)
+        joblib.dump(mlp_model,MLP_FILENAME, compress=9)
         return c[0]
+
+
 
 
 def vprint(*data):

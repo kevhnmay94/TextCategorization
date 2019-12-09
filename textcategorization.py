@@ -24,8 +24,10 @@ useScikitSVM = False
 useScikitMLP = True
 useKeras = False
 verbose = False
-test_str = None
+headline = None
+content = None
 probaResult = True
+partialTrain = True
 
 
 def vprint(*data):
@@ -33,7 +35,7 @@ def vprint(*data):
         print(*data)
 
 
-for s in sys.argv[1:-2]:
+for i,s in enumerate(sys.argv[1:]):
     if s[:2] == '--':
         arg = s[2:]
         if arg == 'train':
@@ -52,6 +54,12 @@ for s in sys.argv[1:-2]:
             probaResult = True
         elif arg == 'no-proba':
             probaResult = False
+        elif arg == 'no-partial':
+            partialTrain = False
+        elif arg == 'headline':
+            headline = sys.argv[i+2]
+        elif arg == 'content':
+            content = sys.argv[i+2]
         if useScikit:
             if arg == 'mlp':
                 useScikitMLP = True
@@ -122,8 +130,6 @@ for s in sys.argv[1:-2]:
                     fitCorpus = True
                 elif 'f' == arg:
                     fitCorpus = False
-    else:
-        test_str = s
 
 if not trainMode:
     fitCorpus = False
@@ -144,8 +150,14 @@ if corpus is None or writeCorpus:
     corpus = mypreprocessing.write_corpus(path, fix_contractions=False)
 
 if useScikit:
+    test_str = None
+    vprint("Headline: ",headline)
+    vprint("Content: ",content)
+    if headline is not None and content is not None:
+        test_str = headline + " " + content
+    vprint("Test: ",test_str)
     scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
-                             fit_train_model=fitTrainModel,
+                             fit_train_model=fitTrainModel, partial=True,
                              proba=probaResult, verbose=verbose, new_data=test_str)
     if useScikitMNB:
         result = scikitprocessing.test_mnb()
@@ -154,10 +166,16 @@ if useScikit:
     if useScikitMLP:
         result = scikitprocessing.test_mlp()
     if isinstance(result, list):
-        dump = json.dumps(result)
-        print(dump)
+        print(result[0])
+        if headline is not None and content is not None:
+            dataset = pd.DataFrame(data={'category': result[1], 'headline': [headline], 'content': [content]})
+            dataset.to_csv(path + 'dataset-all.csv',mode='a',header=False,index=False)
     else:
         print(result)
+        if headline is not None and content is not None:
+            dataset = pd.DataFrame(data={'category': [result], 'headline': [headline], 'content': [content]})
+            dataset.to_csv(path + 'dataset-all.csv',mode='a',header=False,index=False)
+
 
 if useKeras:
     kerasprocessing.exec(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus, fit_train_model=fitTrainModel,
