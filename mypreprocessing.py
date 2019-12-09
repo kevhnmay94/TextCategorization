@@ -10,27 +10,30 @@ import contractions
 from nltk.corpus import wordnet as wn
 
 fixContractions = False
+isVerbose = False
 np.random.seed()
 
 
-def write_corpus(fix_contractions=False):
+def write_corpus(path,fix_contractions=False,verbose=False):
+    global isVerbose
+    isVerbose = verbose
     nltk.download('punkt')
     nltk.download('wordnet')
     nltk.download('averaged_perceptron_tagger')
     nltk.download('stopwords')
-    corpus = pd.read_csv("dataset-all.csv")
+    corpus = pd.read_csv(path+"dataset-all.csv")
     corpus['text'] = corpus['headline'] + " " + corpus["content"]
     corpus['text'].dropna(inplace=True)
     corpus['text'] = [entry.lower() for entry in corpus['text']]
     if fix_contractions:
         corpus['text'] = [contractions.fix(entry) for entry in corpus['text']]
-    print('Tokenize words...')
+    vprint('Tokenize words...')
     corpus['text'] = [word_tokenize(entry) for entry in corpus['text']]
     tag_map = defaultdict(lambda: wn.NOUN)
     tag_map['J'] = wn.ADJ
     tag_map['V'] = wn.VERB
     tag_map['R'] = wn.ADV
-    print('Lemmatize words...')
+    vprint('Lemmatize words...')
     for index, entry in enumerate(corpus['text']):
         # Declaring Empty List to store the words that follow the rules for this step
         Final_words = []
@@ -46,5 +49,9 @@ def write_corpus(fix_contractions=False):
         corpus.loc[index, 'text_final'] = str(Final_words)
 
     corpus = corpus.loc[:, ['category', 'text_final']]
-    corpus.to_csv('dataset_final.csv')
+    corpus.to_csv(path+'dataset_final.csv')
     return corpus
+
+def vprint(*data):
+    if isVerbose:
+        print(*data)

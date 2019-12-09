@@ -6,29 +6,32 @@ import kerasprocessing
 import mypreprocessing
 import json
 import sys
+from pathlib import Path
+import os
 
-MNB_FILENAME = 'mnb_classifier.pkl'
-SVM_FILENAME = 'svm_classifier.pkl'
-MLP_FILENAME = 'mlp_classifier.pkl'
-CORPUS_VECTOR = 'tfidf_vector.pkl'
+path = str(Path(sys.argv[0]).parent) + str(os.sep)
+MNB_FILENAME = path + 'mnb_classifier.pkl'
+SVM_FILENAME = path + 'svm_classifier.pkl'
+MLP_FILENAME = path + 'mlp_classifier.pkl'
+CORPUS_VECTOR = path + 'tfidf_vector.pkl'
 trainMode = False
 fitCorpus = True
 fitTrainModel = True
-writeCorpus = True
+writeCorpus = False
 useScikit = True
-useScikitMNB = True
-useScikitSVM = True
+useScikitMNB = False
+useScikitSVM = False
 useScikitMLP = True
 useKeras = False
-verbose = False
-
+verbose = True
+test_str = None
 
 def vprint(*data):
     if verbose:
         print(*data)
 
 
-for s in sys.argv:
+for s in sys.argv[1:-2]:
     if s[:2] == '--':
         arg = s[2:]
         if arg == 'train':
@@ -69,7 +72,6 @@ for s in sys.argv:
                 fitCorpus = True
             elif arg == 'no-fit-corpus':
                 fitCorpus = False
-
     elif s[0] == '-':
         for arg in s[1:]:
             if 't' == arg:
@@ -114,6 +116,8 @@ for s in sys.argv:
                     fitCorpus = True
                 elif 'f' == arg:
                     fitCorpus = False
+    else:
+        test_str = s
 
 if not trainMode:
     fitCorpus = False
@@ -125,17 +129,17 @@ if writeCorpus:
     corpus = None
 else:
     try:
-        corpus = pd.read_csv("dataset_final.csv")
+        corpus = pd.read_csv(path+"dataset_final.csv")
     except FileNotFoundError:
         corpus = None
 if corpus is None or writeCorpus:
     writeCorpus = True
     fitTrainModel = True
-    corpus = mypreprocessing.write_corpus(fix_contractions=False)
+    corpus = mypreprocessing.write_corpus(path,fix_contractions=False)
 
 if useScikit:
-    scikitprocessing.prepare(corpus, write_corpus=writeCorpus, fit_corpus=fitCorpus, fit_train_model=fitTrainModel,
-                             proba=True, verbose=verbose)
+    scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus, fit_train_model=fitTrainModel,
+                             proba=True, verbose=verbose, new_data=test_str)
     if useScikitMNB:
         result = scikitprocessing.test_mnb()
     if useScikitSVM:
@@ -149,5 +153,5 @@ if useScikit:
         print(result)
 
 if useKeras:
-    kerasprocessing.exec(corpus, write_corpus=writeCorpus, fit_corpus=fitCorpus, fit_train_model=fitTrainModel,
-                         verbose=verbose)
+    kerasprocessing.exec(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus, fit_train_model=fitTrainModel,
+                         verbose=verbose, new_data=test_str)
