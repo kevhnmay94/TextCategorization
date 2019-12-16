@@ -155,7 +155,7 @@ if useScikit:
     vprint("Content: ",content)
     if headline is not None and content is not None:
         test_str = headline + " " + content
-    vprint("Test: ",test_str)
+    vprint("Testing Result: ",test_str)
     scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
                              fit_train_model=fitTrainModel, partial=True,
                              proba=probaResult, verbose=verbose, new_data=test_str)
