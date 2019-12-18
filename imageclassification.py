@@ -8,12 +8,13 @@ import tensorflow as tf
 from tensorflow.keras import datasets, models
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D
 import numpy as np
 import matplotlib.pyplot as plt
 
-fitModel = True
-plotOn = True
+fitModel = False
+plotOn = False
 FILE_DIR = str(Path(sys.argv[0]).parent) + str(os.sep)
 
 
@@ -178,6 +179,20 @@ def catdog():
             plt.title('Training and Validation Accuracy')
             plt.show()
         model.save('catdog.pkl')
+
+    image_path = "cats_and_dogs_filtered/odie.jpg"
+    img = load_img(image_path, target_size=(IMG_HEIGHT, IMG_WIDTH))
+    plt.imshow(img)
+    img = np.expand_dims(img, axis=0)
+    result = model.predict_classes(img)
+    print(result)
+    if result[0][0] == 0:
+        print('cat')
+        plt.title('cat')
+    elif result[0][0] == 1:
+        print('dog')
+        plt.title('dog')
+    plt.show()
 
 
 if __name__ == "__main__":
