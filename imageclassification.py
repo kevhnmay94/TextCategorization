@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os, sys
 from pathlib import Path
 import time
+import argparse
 
 import tensorflow as tf
 from tensorflow.keras.applications import Xception, xception, MobileNetV2, mobilenet_v2, ResNet50, resnet50
@@ -17,9 +18,42 @@ import matplotlib.pyplot as plt
 
 fitModel = False
 plotOn = False
+verbose = False
+image_file = None
+train_path = None
+
+
+def vprint(*data):
+    if verbose:
+        print(*data)
+
+
+for i, s in enumerate(sys.argv[1:]):
+    if s[:2] == '--':
+        arg = s[2:]
+        if arg == 'path':
+            train_path = sys.argv[i + 2]
+        elif arg == 'image':
+            image_file = sys.argv[i + 2]
+    elif s[0] == '-':
+        for arg in s[1:]:
+            if 'v' == arg:
+                verbose = True
+            elif 'q' == arg:
+                verbose = False
+            elif 'M' == arg:
+                fitModel = True
+            elif 'm' == arg:
+                fitModel = False
+            elif 'P' == arg:
+                plotOn = True
+            elif 'p' == arg:
+                plotOn = False
+
 FILE_DIR = str(Path(sys.argv[0]).parent) + str(os.sep)
 
-image_path = "cats_and_dogs_filtered/truck.jpg"
+if image_file is None:
+    image_file = "cats_and_dogs_filtered/truck.jpg"
 
 
 def cifar():
@@ -45,7 +79,7 @@ def cifar():
     try:
         model = models.load_model(FILE_DIR + 'cifar.pkl')
     except IOError as err:
-        print(err)
+        vprint(err)
         model = None
         fitModel = True
     if model is None:
@@ -109,18 +143,18 @@ def cifar():
         model.save(FILE_DIR + 'cifar.pkl')
 
     test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
-    print(test_acc)
+    vprint(test_acc)
 
-    img = load_img(image_path, target_size=(32, 32))
+    img = load_img(image_file, target_size=(32, 32))
     plt.imshow(img)
     img = np.expand_dims(img, axis=0)
     img = img / 255.0
     result = model.predict_proba(img)
     arr = np.array(result[0])
-    print(result)
+    vprint(result)
     top_three = arr.argsort()[::-1][:3]
     label = class_names[np.argmax(result[0])]
-    print(label)
+    vprint(label)
     plt.title(label)
     plt.show()
 
@@ -144,10 +178,10 @@ def subdir(parent: str):
 def catdog():
     global fitModel, plotOn
     PATH = os.path.join(FILE_DIR, 'cats_and_dogs_filtered')
-    print(PATH)
+    vprint(PATH)
     train_dir = os.path.join(PATH, 'train')
     validation_dir = os.path.join(PATH, 'validation')
-    print(train_dir)
+    vprint(train_dir)
     train_cats_dir = os.path.join(train_dir, 'cats')  # directory with our training cat pictures
     train_dogs_dir = os.path.join(train_dir, 'dogs')  # directory with our training dog pictures
     validation_cats_dir = os.path.join(validation_dir, 'cats')  # directory with our validation cat pictures
@@ -187,7 +221,7 @@ def catdog():
     try:
         model = models.load_model('catdog.pkl')
     except IOError as err:
-        print(err)
+        vprint(err)
         model = None
         fitModel = True
     if model is None:
@@ -230,16 +264,16 @@ def catdog():
             plt.show()
         model.save('catdog.pkl')
 
-    img = load_img(image_path, target_size=(IMG_HEIGHT, IMG_WIDTH))
+    img = load_img(image_file, target_size=(IMG_HEIGHT, IMG_WIDTH))
     plt.imshow(img)
     img = np.expand_dims(img, axis=0)
     result = model.predict_classes(img)
-    print(result)
+    vprint(result)
     if result[0][0] == 0:
-        print('cat')
+        vprint('cat')
         plt.title('cat')
     elif result[0][0] == 1:
-        print('dog')
+        vprint('dog')
         plt.title('dog')
     plt.show()
 
@@ -262,9 +296,9 @@ def imagenet(model_name):
         decode_predictions = resnet50.decode_predictions
         size = (224, 224)
     else:
-        print("No model found")
+        vprint("No model found")
         return
-    img = load_img(image_path, target_size=size)
+    img = load_img(image_file, target_size=size)
     plt.imshow(img)
     x = image.img_to_array(img)
     x = np.expand_dims(x, axis=0)
@@ -272,16 +306,16 @@ def imagenet(model_name):
     pred = model.predict(x)
     end_time = time.process_time()
     elapsed = end_time - start_time
-    print("Process time: ", f'{elapsed:.3f}s')
-    print('Predictions:')
+    vprint("Process time: ", f'{elapsed:.3f}s')
+    vprint('Predictions:')
     for a in decode_predictions(pred, top=5)[0]:
-        print(a[1], ": ", f'{a[2] * 100:.2f}%')
+        vprint(a[1], ": ", f'{a[2] * 100:.2f}%')
 
 
-def asdf(path,model_name):
+def asdf(path, model_name, img_path):
     global fitModel, plotOn
     PATH = os.path.join(FILE_DIR, path)
-    print(PATH)
+    vprint(PATH)
     category = subdir(str(PATH))
     total_item = 0
     for c in category:
@@ -290,53 +324,57 @@ def asdf(path,model_name):
         total_item += num_dir
     batch_size = 128
     epochs = 15
-    IMG_HEIGHT = 299
-    IMG_WIDTH = 299
+    if model_name == 'xception':
+        IMG_HEIGHT = 299
+        IMG_WIDTH = 299
+    else:
+        IMG_HEIGHT = 224
+        IMG_WIDTH = 224
     image_generator = ImageDataGenerator(rescale=1. / 255,
-                                               rotation_range=45,
-                                               width_shift_range=.15,
-                                               height_shift_range=.15,
-                                               horizontal_flip=True,
-                                               zoom_range=0.5,
-                                               validation_split=0.2
-                                               )  # Generator for our training data
+                                         rotation_range=45,
+                                         width_shift_range=.15,
+                                         height_shift_range=.15,
+                                         horizontal_flip=True,
+                                         zoom_range=0.5,
+                                         validation_split=0.2
+                                         )  # Generator for our training data
     train_data_gen = image_generator.flow_from_directory(batch_size=batch_size,
-                                                               directory=PATH,
-                                                               shuffle=True,
-                                                               target_size=(IMG_HEIGHT, IMG_WIDTH),
-                                                               class_mode='categorical',
-                                                               subset='training'
-                                                            )
+                                                         directory=PATH,
+                                                         shuffle=True,
+                                                         target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                         class_mode='categorical',
+                                                         subset='training'
+                                                         )
     val_data_gen = image_generator.flow_from_directory(batch_size=batch_size,
-                                                               directory=PATH,
-                                                               shuffle=True,
-                                                               target_size=(IMG_HEIGHT, IMG_WIDTH),
-                                                               class_mode='categorical',
-                                                               subset='validation'
-                                                            )
+                                                       directory=PATH,
+                                                       shuffle=True,
+                                                       target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                       class_mode='categorical',
+                                                       subset='validation'
+                                                       )
     base_model = None
     if model_name == 'xception':
-        base_model = Xception(weights='imagenet',include_top=False)
+        base_model = Xception(weights='imagenet', include_top=False)
         preprocess_input = xception.preprocess_input
         decode_predictions = xception.decode_predictions
         size = (299, 299)
     elif model_name == 'mobilenet':
-        base_model = MobileNetV2(weights='imagenet',include_top=False)
+        base_model = MobileNetV2(weights='imagenet', include_top=False)
         preprocess_input = mobilenet_v2.preprocess_input
         decode_predictions = mobilenet_v2.decode_predictions
         size = (224, 224)
     elif model_name == 'resnet50':
-        base_model = ResNet50(weights='imagenet',include_top=False)
+        base_model = ResNet50(weights='imagenet', include_top=False)
         preprocess_input = resnet50.preprocess_input
         decode_predictions = resnet50.decode_predictions
         size = (224, 224)
     else:
-        print("No model found")
+        vprint("No model found")
         return
     try:
-        models.load_model('asdf.pkl')
+        models.load_model(FILE_DIR + 'asdf.pkl')
     except IOError as err:
-        print(err)
+        vprint(err)
         model = None
         fitModel = True
     if model is None:
@@ -358,7 +396,8 @@ def asdf(path,model_name):
         # compile the model (should be done *after* setting layers to non-trainable)
         model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
     if fitModel:
-        model.fit_generator(train_data_gen,steps_per_epoch=train_data_gen.samples,validation_data=val_data_gen,validation_steps=val_data_gen.samples,epochs=epochs)
+        model.fit_generator(train_data_gen, steps_per_epoch=train_data_gen.samples, validation_data=val_data_gen,
+                            validation_steps=val_data_gen.samples, epochs=epochs)
         # at this point, the top layers are well trained and we can start fine-tuning
         # convolutional layers from inception V3. We will freeze the bottom N layers
         # and train the remaining top layers.
@@ -366,33 +405,37 @@ def asdf(path,model_name):
         # let's visualize layer names and layer indices to see how many layers
         # we should freeze:
         for i, layer in enumerate(base_model.layers):
-            print(i, layer.name)
+            vprint(i, layer.name)
 
         # we chose to train the top 2 inception blocks, i.e. we will freeze
         # the first 249 layers and unfreeze the rest:
-        for layer in model.layers[:249]:
+        idx = min(150, len(model.layers // 10))
+        for layer in model.layers[:idx]:
             layer.trainable = False
-        for layer in model.layers[249:]:
+        for layer in model.layers[idx:]:
             layer.trainable = True
 
         # we need to recompile the model for these modifications to take effect
         # we use SGD with a low learning rate
-        from tensorflow.keras.optimizers import SGD
-        model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy')
+        from tensorflow.keras.optimizers import SGD, Adam
+        # model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy')
+        model.compile(optimizer=Adam(lr=0.0001), loss='categorical_crossentropy')
         model.fit_generator(train_data_gen, steps_per_epoch=train_data_gen.samples, validation_data=val_data_gen,
                             validation_steps=val_data_gen.samples, epochs=epochs)
-    img = load_img(image_path, target_size=size)
+        model.save(FILE_DIR + 'asdf.pkl')
+    img = load_img(img_path, target_size=size)
     plt.imshow(img)
     x = image.img_to_array(img)
     x = np.expand_dims(x, axis=0)
     x = preprocess_input(x)
     pred = model.predict(x)
-    print('Predictions:')
+    vprint('Predictions:')
     for a in decode_predictions(pred, top=5)[0]:
-        print(a[1], ": ", f'{a[2] * 100:.2f}%')
+        print(a[1], ": ", f'{a[2]:.2f}')
 
 
 if __name__ == "__main__":
-    imagenet('xception')
-    imagenet('mobilenet')
-    imagenet('resnet50')
+    asdf(train_path, 'xception', image_file)
+    # imagenet('xception')
+    # imagenet('mobilenet')
+    # imagenet('resnet50')
