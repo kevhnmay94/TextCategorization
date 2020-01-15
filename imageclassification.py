@@ -292,18 +292,28 @@ def asdf(path,model_name):
     epochs = 15
     IMG_HEIGHT = 299
     IMG_WIDTH = 299
-    train_image_generator = ImageDataGenerator(rescale=1. / 255,
+    image_generator = ImageDataGenerator(rescale=1. / 255,
                                                rotation_range=45,
                                                width_shift_range=.15,
                                                height_shift_range=.15,
                                                horizontal_flip=True,
-                                               zoom_range=0.5
+                                               zoom_range=0.5,
+                                               validation_split=0.2
                                                )  # Generator for our training data
-    train_data_gen = train_image_generator.flow_from_directory(batch_size=batch_size,
+    train_data_gen = image_generator.flow_from_directory(batch_size=batch_size,
                                                                directory=PATH,
                                                                shuffle=True,
                                                                target_size=(IMG_HEIGHT, IMG_WIDTH),
-                                                               class_mode='categorical')
+                                                               class_mode='categorical',
+                                                               subset='training'
+                                                            )
+    val_data_gen = image_generator.flow_from_directory(batch_size=batch_size,
+                                                               directory=PATH,
+                                                               shuffle=True,
+                                                               target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                               class_mode='categorical',
+                                                               subset='validation'
+                                                            )
     base_model = None
     if model_name == 'xception':
         base_model = Xception(weights='imagenet',include_top=False)
@@ -336,7 +346,7 @@ def asdf(path,model_name):
         # let's add a fully-connected layer
         x = Dense(1024, activation='relu')(x)
         # and a logistic layer -- let's say we have 200 classes
-        predictions = Dense(200, activation='softmax')(x)
+        predictions = Dense(len(category), activation='softmax')(x)
         # this is the model we will train
         model = Model(inputs=base_model.input, outputs=predictions)
 
@@ -347,12 +357,39 @@ def asdf(path,model_name):
 
         # compile the model (should be done *after* setting layers to non-trainable)
         model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
+    if fitModel:
+        model.fit_generator(train_data_gen,steps_per_epoch=train_data_gen.samples,validation_data=val_data_gen,validation_steps=val_data_gen.samples,epochs=epochs)
+        # at this point, the top layers are well trained and we can start fine-tuning
+        # convolutional layers from inception V3. We will freeze the bottom N layers
+        # and train the remaining top layers.
 
+        # let's visualize layer names and layer indices to see how many layers
+        # we should freeze:
+        for i, layer in enumerate(base_model.layers):
+            print(i, layer.name)
 
+        # we chose to train the top 2 inception blocks, i.e. we will freeze
+        # the first 249 layers and unfreeze the rest:
+        for layer in model.layers[:249]:
+            layer.trainable = False
+        for layer in model.layers[249:]:
+            layer.trainable = True
 
-
-
-
+        # we need to recompile the model for these modifications to take effect
+        # we use SGD with a low learning rate
+        from tensorflow.keras.optimizers import SGD
+        model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy')
+        model.fit_generator(train_data_gen, steps_per_epoch=train_data_gen.samples, validation_data=val_data_gen,
+                            validation_steps=val_data_gen.samples, epochs=epochs)
+    img = load_img(image_path, target_size=size)
+    plt.imshow(img)
+    x = image.img_to_array(img)
+    x = np.expand_dims(x, axis=0)
+    x = preprocess_input(x)
+    pred = model.predict(x)
+    print('Predictions:')
+    for a in decode_predictions(pred, top=5)[0]:
+        print(a[1], ": ", f'{a[2] * 100:.2f}%')
 
 
 if __name__ == "__main__":
