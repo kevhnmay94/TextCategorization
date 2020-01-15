@@ -7,11 +7,11 @@ import time
 import tensorflow as tf
 from tensorflow.keras.applications import Xception, xception, MobileNetV2, mobilenet_v2, ResNet50, resnet50
 from tensorflow.keras import datasets, models
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.preprocessing.image import load_img
-from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D
+from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D, GlobalAveragePooling2D
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -19,7 +19,7 @@ fitModel = False
 plotOn = False
 FILE_DIR = str(Path(sys.argv[0]).parent) + str(os.sep)
 
-image_path = "cats_and_dogs_filtered/square.jpg"
+image_path = "cats_and_dogs_filtered/truck.jpg"
 
 
 def cifar():
@@ -133,6 +133,12 @@ def plotImages(images_arr):
         ax.axis('off')
     plt.tight_layout()
     plt.show()
+
+
+def subdir(parent: str):
+    category = [x[1] for x in os.walk(parent)][0]
+    b = sorted(category)
+    return b
 
 
 def catdog():
@@ -270,6 +276,83 @@ def imagenet(model_name):
     print('Predictions:')
     for a in decode_predictions(pred, top=5)[0]:
         print(a[1], ": ", f'{a[2] * 100:.2f}%')
+
+
+def asdf(path,model_name):
+    global fitModel, plotOn
+    PATH = os.path.join(FILE_DIR, path)
+    print(PATH)
+    category = subdir(str(PATH))
+    total_item = 0
+    for c in category:
+        dir = os.path.join(PATH, c)
+        num_dir = len(os.listdir(dir))
+        total_item += num_dir
+    batch_size = 128
+    epochs = 15
+    IMG_HEIGHT = 299
+    IMG_WIDTH = 299
+    train_image_generator = ImageDataGenerator(rescale=1. / 255,
+                                               rotation_range=45,
+                                               width_shift_range=.15,
+                                               height_shift_range=.15,
+                                               horizontal_flip=True,
+                                               zoom_range=0.5
+                                               )  # Generator for our training data
+    train_data_gen = train_image_generator.flow_from_directory(batch_size=batch_size,
+                                                               directory=PATH,
+                                                               shuffle=True,
+                                                               target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                               class_mode='categorical')
+    base_model = None
+    if model_name == 'xception':
+        base_model = Xception(weights='imagenet',include_top=False)
+        preprocess_input = xception.preprocess_input
+        decode_predictions = xception.decode_predictions
+        size = (299, 299)
+    elif model_name == 'mobilenet':
+        base_model = MobileNetV2(weights='imagenet',include_top=False)
+        preprocess_input = mobilenet_v2.preprocess_input
+        decode_predictions = mobilenet_v2.decode_predictions
+        size = (224, 224)
+    elif model_name == 'resnet50':
+        base_model = ResNet50(weights='imagenet',include_top=False)
+        preprocess_input = resnet50.preprocess_input
+        decode_predictions = resnet50.decode_predictions
+        size = (224, 224)
+    else:
+        print("No model found")
+        return
+    try:
+        models.load_model('asdf.pkl')
+    except IOError as err:
+        print(err)
+        model = None
+        fitModel = True
+    if model is None:
+        # add a global spatial average pooling layer
+        x = base_model.output
+        x = GlobalAveragePooling2D()(x)
+        # let's add a fully-connected layer
+        x = Dense(1024, activation='relu')(x)
+        # and a logistic layer -- let's say we have 200 classes
+        predictions = Dense(200, activation='softmax')(x)
+        # this is the model we will train
+        model = Model(inputs=base_model.input, outputs=predictions)
+
+        # first: train only the top layers (which were randomly initialized)
+        # i.e. freeze all convolutional InceptionV3 layers
+        for layer in base_model.layers:
+            layer.trainable = False
+
+        # compile the model (should be done *after* setting layers to non-trainable)
+        model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
