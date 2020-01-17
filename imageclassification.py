@@ -6,7 +6,7 @@ import time
 import argparse
 
 import tensorflow as tf
-from tensorflow.keras.applications import Xception, xception, MobileNetV2, mobilenet_v2, ResNet50, resnet50
+from tensorflow.keras.applications import Xception, xception, MobileNetV2, mobilenet_v2, ResNet50, resnet50, InceptionV3, inception_v3
 from tensorflow.keras import datasets, models
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.preprocessing import image
@@ -18,10 +18,10 @@ import matplotlib.pyplot as plt
 
 fitModel = False
 plotOn = False
-verbose = False
+verbose = True
 image_file = None
-train_path = None
-
+train_path = 'konten/kategori'
+model_name = 'xception'
 
 def vprint(*data):
     if verbose:
@@ -35,15 +35,17 @@ for i, s in enumerate(sys.argv[1:]):
             train_path = sys.argv[i + 2]
         elif arg == 'image':
             image_file = sys.argv[i + 2]
+        elif arg == 'model':
+            model_name = sys.argv[i + 2]
     elif s[0] == '-':
         for arg in s[1:]:
             if 'v' == arg:
                 verbose = True
             elif 'q' == arg:
                 verbose = False
-            elif 'M' == arg:
+            elif 'F' == arg:
                 fitModel = True
-            elif 'm' == arg:
+            elif 'f' == arg:
                 fitModel = False
             elif 'P' == arg:
                 plotOn = True
@@ -53,7 +55,7 @@ for i, s in enumerate(sys.argv[1:]):
 FILE_DIR = str(Path(sys.argv[0]).parent) + str(os.sep)
 
 if image_file is None:
-    image_file = "cats_and_dogs_filtered/truck.jpg"
+    image_file = "cats_and_dogs_filtered/bajubatik.jpg"
 
 
 def cifar():
@@ -322,9 +324,9 @@ def asdf(path, model_name, img_path):
         dir = os.path.join(PATH, c)
         num_dir = len(os.listdir(dir))
         total_item += num_dir
-    batch_size = 128
+    batch_size = 10
     epochs = 15
-    if model_name == 'xception':
+    if model_name == 'xception' or model_name == 'inception':
         IMG_HEIGHT = 299
         IMG_WIDTH = 299
     else:
@@ -368,11 +370,16 @@ def asdf(path, model_name, img_path):
         preprocess_input = resnet50.preprocess_input
         decode_predictions = resnet50.decode_predictions
         size = (224, 224)
+    elif model_name == 'inception':
+        base_model = InceptionV3(weights='imagenet', include_top=False)
+        preprocess_input = inception_v3.preprocess_input
+        decode_predictions = inception_v3.decode_predictions
+        size = (299, 299)
     else:
         vprint("No model found")
         return
     try:
-        models.load_model(FILE_DIR + 'asdf.pkl')
+        model = models.load_model(FILE_DIR + 'asdf.pkl')
     except IOError as err:
         vprint(err)
         model = None
@@ -382,7 +389,7 @@ def asdf(path, model_name, img_path):
         x = base_model.output
         x = GlobalAveragePooling2D()(x)
         # let's add a fully-connected layer
-        x = Dense(1024, activation='relu')(x)
+        x = Dense(512, activation='relu')(x)
         # and a logistic layer -- let's say we have 200 classes
         predictions = Dense(len(category), activation='softmax')(x)
         # this is the model we will train
@@ -392,6 +399,11 @@ def asdf(path, model_name, img_path):
         # i.e. freeze all convolutional InceptionV3 layers
         for layer in base_model.layers:
             layer.trainable = False
+            
+        # let's visualize layer names and layer indices to see how many layers
+        # we should freeze:
+        for i, layer in enumerate(base_model.layers):
+            vprint(i, layer.name)
 
         # compile the model (should be done *after* setting layers to non-trainable)
         model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
@@ -402,14 +414,9 @@ def asdf(path, model_name, img_path):
         # convolutional layers from inception V3. We will freeze the bottom N layers
         # and train the remaining top layers.
 
-        # let's visualize layer names and layer indices to see how many layers
-        # we should freeze:
-        for i, layer in enumerate(base_model.layers):
-            vprint(i, layer.name)
-
         # we chose to train the top 2 inception blocks, i.e. we will freeze
         # the first 249 layers and unfreeze the rest:
-        idx = min(150, len(model.layers // 10))
+        idx = 106
         for layer in model.layers[:idx]:
             layer.trainable = False
         for layer in model.layers[idx:]:
@@ -423,19 +430,24 @@ def asdf(path, model_name, img_path):
         model.fit_generator(train_data_gen, steps_per_epoch=train_data_gen.samples, validation_data=val_data_gen,
                             validation_steps=val_data_gen.samples, epochs=epochs)
         model.save(FILE_DIR + 'asdf.pkl')
-    img = load_img(img_path, target_size=size)
-    plt.imshow(img)
-    x = image.img_to_array(img)
-    x = np.expand_dims(x, axis=0)
-    x = preprocess_input(x)
-    pred = model.predict(x)
-    vprint('Predictions:')
-    for a in decode_predictions(pred, top=5)[0]:
-        print(a[1], ": ", f'{a[2]:.2f}')
+    if img_path is not None:
+        img = load_img(img_path, target_size=size)
+        plt.imshow(img)
+        x = image.img_to_array(img)
+        x = np.expand_dims(x, axis=0)
+        x = preprocess_input(x)
+        pred = model.predict(x)
+        vprint(pred)
+        arr = np.array(pred[0])
+        sortarr = arr.argsort()[::-1][:3]
+        vprint(sortarr)
+        vprint('Predictions:')
+        for a in sortarr:
+            print(category[a],": ",f'{arr[a]:.2f}')
 
 
 if __name__ == "__main__":
-    asdf(train_path, 'xception', image_file)
+    asdf(train_path, model_name, image_file)
     # imagenet('xception')
     # imagenet('mobilenet')
     # imagenet('resnet50')
