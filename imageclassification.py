@@ -3,10 +3,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os, sys
 from pathlib import Path
 import time
-import argparse
 
 import tensorflow as tf
-from tensorflow.keras.applications import Xception, xception, MobileNetV2, mobilenet_v2, ResNet50, resnet50, InceptionV3, inception_v3
+from tensorflow.keras.applications import Xception, xception, MobileNetV2, mobilenet_v2, ResNet50, resnet50, \
+    InceptionV3, inception_v3
 from tensorflow.keras import datasets, models
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.preprocessing import image
@@ -15,13 +15,19 @@ from tensorflow.keras.preprocessing.image import load_img
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D, GlobalAveragePooling2D
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 fitModel = False
 plotOn = False
 verbose = True
 image_file = None
 train_path = 'konten/kategori'
+image_path = 'konten/image'
 model_name = 'xception'
+is_csv_to_link = False
+is_link_to_csv = False
+remove_model = False
+
 
 def vprint(*data):
     if verbose:
@@ -31,12 +37,18 @@ def vprint(*data):
 for i, s in enumerate(sys.argv[1:]):
     if s[:2] == '--':
         arg = s[2:]
-        if arg == 'path':
+        if arg == 'train_path':
             train_path = sys.argv[i + 2]
         elif arg == 'image':
             image_file = sys.argv[i + 2]
         elif arg == 'model':
             model_name = sys.argv[i + 2]
+        elif arg == 'csv_to_link':
+            is_csv_to_link = True
+        elif arg == 'link_to_csv':
+            is_link_to_csv = True
+        elif arg == 'image_path':
+            image_path = sys.argv[i + 2]
     elif s[0] == '-':
         for arg in s[1:]:
             if 'v' == arg:
@@ -51,11 +63,13 @@ for i, s in enumerate(sys.argv[1:]):
                 plotOn = True
             elif 'p' == arg:
                 plotOn = False
+            elif 'r' == arg:
+                remove_model = True
 
 FILE_DIR = str(Path(sys.argv[0]).parent) + str(os.sep)
 
 if image_file is None:
-    image_file = "cats_and_dogs_filtered/bajubatik.jpg"
+    image_file = "cats_and_dogs_filtered/pot4.jpg"
 
 
 def cifar():
@@ -316,7 +330,10 @@ def imagenet(model_name):
 
 def asdf(path, model_name, img_path):
     global fitModel, plotOn
-    PATH = os.path.join(FILE_DIR, path)
+    if os.path.isabs(path):
+        PATH = path
+    else:
+        PATH = os.path.join(FILE_DIR, path)
     vprint(PATH)
     category = subdir(str(PATH))
     total_item = 0
@@ -329,62 +346,43 @@ def asdf(path, model_name, img_path):
     if model_name == 'xception' or model_name == 'inception':
         IMG_HEIGHT = 299
         IMG_WIDTH = 299
+        size = (299,299)
+        if model_name == 'xception':
+            preprocess_input = xception.preprocess_input
+            decode_predictions = xception.decode_predictions
+        else:
+            preprocess_input = inception_v3.preprocess_input
+            decode_predictions = inception_v3.decode_predictions
     else:
         IMG_HEIGHT = 224
         IMG_WIDTH = 224
-    image_generator = ImageDataGenerator(rescale=1. / 255,
-                                         rotation_range=45,
-                                         width_shift_range=.15,
-                                         height_shift_range=.15,
-                                         horizontal_flip=True,
-                                         zoom_range=0.5,
-                                         validation_split=0.2
-                                         )  # Generator for our training data
-    train_data_gen = image_generator.flow_from_directory(batch_size=batch_size,
-                                                         directory=PATH,
-                                                         shuffle=True,
-                                                         target_size=(IMG_HEIGHT, IMG_WIDTH),
-                                                         class_mode='categorical',
-                                                         subset='training'
-                                                         )
-    val_data_gen = image_generator.flow_from_directory(batch_size=batch_size,
-                                                       directory=PATH,
-                                                       shuffle=True,
-                                                       target_size=(IMG_HEIGHT, IMG_WIDTH),
-                                                       class_mode='categorical',
-                                                       subset='validation'
-                                                       )
-    base_model = None
-    if model_name == 'xception':
-        base_model = Xception(weights='imagenet', include_top=False)
-        preprocess_input = xception.preprocess_input
-        decode_predictions = xception.decode_predictions
-        size = (299, 299)
-    elif model_name == 'mobilenet':
-        base_model = MobileNetV2(weights='imagenet', include_top=False)
-        preprocess_input = mobilenet_v2.preprocess_input
-        decode_predictions = mobilenet_v2.decode_predictions
         size = (224, 224)
-    elif model_name == 'resnet50':
-        base_model = ResNet50(weights='imagenet', include_top=False)
-        preprocess_input = resnet50.preprocess_input
-        decode_predictions = resnet50.decode_predictions
-        size = (224, 224)
-    elif model_name == 'inception':
-        base_model = InceptionV3(weights='imagenet', include_top=False)
-        preprocess_input = inception_v3.preprocess_input
-        decode_predictions = inception_v3.decode_predictions
-        size = (299, 299)
-    else:
-        vprint("No model found")
-        return
+        if model_name == 'resnet50':
+            preprocess_input = resnet50.preprocess_input
+            decode_predictions = resnet50.decode_predictions
+        elif model_name == 'mobilenet':
+            preprocess_input = mobilenet_v2.preprocess_input
+            decode_predictions = mobilenet_v2.decode_predictions
     try:
-        model = models.load_model(FILE_DIR + 'asdf.pkl')
+        if model_name == 'xception':
+            model = models.load_model(FILE_DIR + 'asdf.pkl')
     except IOError as err:
         vprint(err)
         model = None
         fitModel = True
     if model is None:
+        base_model = None
+        if model_name == 'xception':
+            base_model = Xception(weights='imagenet', include_top=False)
+        elif model_name == 'mobilenet':
+            base_model = MobileNetV2(weights='imagenet', include_top=False)
+        elif model_name == 'resnet50':
+            base_model = ResNet50(weights='imagenet', include_top=False)
+        elif model_name == 'inception':
+            base_model = InceptionV3(weights='imagenet', include_top=False)
+        else:
+            vprint("No model found")
+            return
         # add a global spatial average pooling layer
         x = base_model.output
         x = GlobalAveragePooling2D()(x)
@@ -399,7 +397,7 @@ def asdf(path, model_name, img_path):
         # i.e. freeze all convolutional InceptionV3 layers
         for layer in base_model.layers:
             layer.trainable = False
-            
+
         # let's visualize layer names and layer indices to see how many layers
         # we should freeze:
         for i, layer in enumerate(base_model.layers):
@@ -408,6 +406,28 @@ def asdf(path, model_name, img_path):
         # compile the model (should be done *after* setting layers to non-trainable)
         model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
     if fitModel:
+        image_generator = ImageDataGenerator(rescale=1. / 255,
+                                             rotation_range=45,
+                                             width_shift_range=.15,
+                                             height_shift_range=.15,
+                                             horizontal_flip=True,
+                                             zoom_range=0.5,
+                                             validation_split=0.2
+                                             )  # Generator for our training data
+        train_data_gen = image_generator.flow_from_directory(batch_size=batch_size,
+                                                             directory=PATH,
+                                                             shuffle=True,
+                                                             target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                             class_mode='categorical',
+                                                             subset='training'
+                                                             )
+        val_data_gen = image_generator.flow_from_directory(batch_size=batch_size,
+                                                           directory=PATH,
+                                                           shuffle=True,
+                                                           target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                           class_mode='categorical',
+                                                           subset='validation'
+                                                           )
         model.fit_generator(train_data_gen, steps_per_epoch=train_data_gen.samples, validation_data=val_data_gen,
                             validation_steps=val_data_gen.samples, epochs=epochs)
         # at this point, the top layers are well trained and we can start fine-tuning
@@ -431,11 +451,13 @@ def asdf(path, model_name, img_path):
                             validation_steps=val_data_gen.samples, epochs=epochs)
         model.save(FILE_DIR + 'asdf.pkl')
     if img_path is not None:
+        if not os.path.isabs(img_path):
+            img_path = os.path.join(FILE_DIR, img_path)
         img = load_img(img_path, target_size=size)
-        plt.imshow(img)
         x = image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
         x = preprocess_input(x)
+        vprint("Predicting:")
         pred = model.predict(x)
         vprint(pred)
         arr = np.array(pred[0])
@@ -443,10 +465,66 @@ def asdf(path, model_name, img_path):
         vprint(sortarr)
         vprint('Predictions:')
         for a in sortarr:
-            print(category[a],": ",f'{arr[a]:.2f}')
+            print(category[a], ": ", f'{arr[a]:.2f}')
+
+
+def links_to_csv(link_path, image_path):
+    if os.path.isabs(link_path):
+        L_PATH = link_path
+    else:
+        L_PATH = os.path.join(FILE_DIR, link_path)
+    if os.path.isabs(image_path):
+        I_PATH = image_path
+    else:
+        I_PATH = os.path.join(FILE_DIR, image_path)
+    vprint(L_PATH)
+    category = subdir(str(L_PATH))
+    images = sorted([x[2] for x in os.walk(image_path)][0])
+    datafr = pd.DataFrame(np.zeros((len(images), len(category)), dtype=int), index=images, columns=category)
+    vprint(datafr)
+    for c in category:
+        C_PATH = os.path.join(L_PATH,c)
+        links = [x[2] for x in os.walk(C_PATH)][0]
+        for l in links:
+            datafr.loc[l][c] = 1
+    vprint(datafr)
+    csv = os.path.join(FILE_DIR, 'image-link.csv')
+    datafr.to_csv(csv)
+
+def csv_to_links(link_path, image_path):
+    if os.path.isabs(link_path):
+        L_PATH = link_path
+    else:
+        L_PATH = os.path.join(FILE_DIR, link_path)
+    if os.path.isabs(image_path):
+        I_PATH = image_path
+    else:
+        I_PATH = os.path.join(FILE_DIR, image_path)
+    vprint(L_PATH)
+    category = subdir(str(L_PATH))
+    csv = os.path.join(FILE_DIR,'image-link.csv')
+    datafr = pd.read_csv(csv,index_col=0).sort_index
+    index = datafr.index.values
+    for i in index:
+        # vprint(datafr.loc[i])
+        for c in category:
+            C_PATH = os.path.join(L_PATH, c)
+            CI_PATH = os.path.join(C_PATH,i)
+            S_PATH = os.path.join(I_PATH, i)
+            if(datafr.loc[i][c] == 1):
+                try:
+                    os.symlink(S_PATH,CI_PATH)
+                except FileExistsError:
+                    pass
 
 
 if __name__ == "__main__":
+    if is_link_to_csv:
+        links_to_csv(train_path, image_path)
+    if is_csv_to_link:
+        csv_to_links(train_path, image_path)
+    if remove_model:
+        os.remove(FILE_DIR + 'asdf.pkl')
     asdf(train_path, model_name, image_file)
     # imagenet('xception')
     # imagenet('mobilenet')
