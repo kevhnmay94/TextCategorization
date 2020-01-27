@@ -328,7 +328,7 @@ def imagenet(model_name):
         vprint(a[1], ": ", f'{a[2] * 100:.2f}%')
 
 
-def asdf(path, model_name, img_path):
+def asdf(path, model_name, img_path, remove_model):
     global fitModel, plotOn
     if os.path.isabs(path):
         PATH = path
@@ -370,7 +370,7 @@ def asdf(path, model_name, img_path):
         vprint(err)
         model = None
         fitModel = True
-    if model is None:
+    if model is None or remove_model:
         base_model = None
         if model_name == 'xception':
             base_model = Xception(weights='imagenet', include_top=False)
@@ -506,7 +506,6 @@ def csv_to_links(link_path, image_path):
     datafr = pd.read_csv(csv,index_col=0).sort_index
     index = datafr.index.values
     for i in index:
-        # vprint(datafr.loc[i])
         for c in category:
             C_PATH = os.path.join(L_PATH, c)
             CI_PATH = os.path.join(C_PATH,i)
@@ -523,9 +522,7 @@ if __name__ == "__main__":
         links_to_csv(train_path, image_path)
     if is_csv_to_link:
         csv_to_links(train_path, image_path)
-    if remove_model:
-        os.remove(FILE_DIR + 'asdf.pkl')
-    asdf(train_path, model_name, image_file)
+    asdf(train_path, model_name, image_file, remove_model)
     # imagenet('xception')
     # imagenet('mobilenet')
     # imagenet('resnet50')
