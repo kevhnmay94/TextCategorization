@@ -6,7 +6,6 @@ from nltk import pos_tag
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from collections import defaultdict
-import contractions
 from nltk.corpus import wordnet as wn
 
 fixContractions = False
@@ -25,8 +24,6 @@ def write_corpus(path, fix_contractions=False, verbose=False):
     corpus['text'] = corpus['headline'] + " " + corpus["content"]
     corpus['text'].dropna(inplace=True)
     corpus['text'] = [entry.lower() for entry in corpus['text']]
-    if fix_contractions:
-        corpus['text'] = [contractions.fix(entry) for entry in corpus['text']]
     vprint('Tokenize words...')
     corpus['text'] = [word_tokenize(entry) for entry in corpus['text']]
     tag_map = defaultdict(lambda: wn.NOUN)
