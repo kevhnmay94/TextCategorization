@@ -27,6 +27,9 @@ model_name = 'xception'
 is_csv_to_link = False
 is_link_to_csv = False
 remove_model = False
+is_add_to_csv = False
+predict = True
+cat_result = None
 
 
 def vprint(*data):
@@ -37,18 +40,28 @@ def vprint(*data):
 for i, s in enumerate(sys.argv[1:]):
     if s[:2] == '--':
         arg = s[2:]
-        if arg == 'train_path':
+        if arg == 'train-path':
             train_path = sys.argv[i + 2]
         elif arg == 'image':
             image_file = sys.argv[i + 2]
         elif arg == 'model':
             model_name = sys.argv[i + 2]
-        elif arg == 'csv_to_link':
+        elif arg == 'csv-to-link':
             is_csv_to_link = True
-        elif arg == 'link_to_csv':
+        elif arg == 'link-to-csv':
             is_link_to_csv = True
-        elif arg == 'image_path':
+        elif arg == 'image-path':
             image_path = sys.argv[i + 2]
+        elif arg == 'predict':
+            predict = True
+        elif arg == 'no-predict':
+            predict = False
+        elif arg == 'add-to-csv':
+            is_add_to_csv = True
+        elif arg == 'top-category':
+            import ast
+            cat_result = ast.literal_eval(sys.argv[i+2])
+
     elif s[0] == '-':
         for arg in s[1:]:
             if 'v' == arg:
@@ -346,7 +359,7 @@ def asdf(path, model_name, img_path, remove_model):
     if model_name == 'xception' or model_name == 'inception':
         IMG_HEIGHT = 299
         IMG_WIDTH = 299
-        size = (299,299)
+        size = (299, 299)
         if model_name == 'xception':
             preprocess_input = xception.preprocess_input
             decode_predictions = xception.decode_predictions
@@ -466,6 +479,7 @@ def asdf(path, model_name, img_path, remove_model):
         vprint('Predictions:')
         for a in sortarr:
             print(category[a], ": ", f'{arr[a]:.2f}')
+        return sortarr
 
 
 def links_to_csv(link_path, image_path):
@@ -483,13 +497,14 @@ def links_to_csv(link_path, image_path):
     datafr = pd.DataFrame(np.zeros((len(images), len(category)), dtype=int), index=images, columns=category)
     vprint(datafr)
     for c in category:
-        C_PATH = os.path.join(L_PATH,c)
+        C_PATH = os.path.join(L_PATH, c)
         links = [x[2] for x in os.walk(C_PATH)][0]
         for l in links:
             datafr.loc[l][c] = 1
     vprint(datafr)
     csv = os.path.join(FILE_DIR, 'image-link.csv')
     datafr.to_csv(csv)
+
 
 def csv_to_links(link_path, image_path):
     if os.path.isabs(link_path):
@@ -502,27 +517,63 @@ def csv_to_links(link_path, image_path):
         I_PATH = os.path.join(FILE_DIR, image_path)
     vprint(L_PATH)
     category = subdir(str(L_PATH))
-    csv = os.path.join(FILE_DIR,'image-link.csv')
-    datafr = pd.read_csv(csv,index_col=0).sort_index
+    csv = os.path.join(FILE_DIR, 'image-link.csv')
+    datafr = pd.read_csv(csv, index_col=0).sort_index()
     index = datafr.index.values
     for i in index:
         for c in category:
             C_PATH = os.path.join(L_PATH, c)
-            CI_PATH = os.path.join(C_PATH,i)
+            if not os.path.exists(C_PATH):
+                os.mkdir(C_PATH)
+            CI_PATH = os.path.join(C_PATH, i)
             S_PATH = os.path.join(I_PATH, i)
-            if(datafr.loc[i][c] == 1):
+            if (datafr.loc[i][c] == 1):
                 try:
-                    os.symlink(S_PATH,CI_PATH)
+                    os.symlink(S_PATH, CI_PATH)
                 except FileExistsError:
                     pass
 
 
+def add_to_csv(img_path, link_path, top_category):
+    if os.path.isabs(img_path):
+        img_path = os.path.basename(img_path)
+    else:
+        img_path = os.path.join(FILE_DIR, img_path)
+        img_path = os.path.basename(img_path)
+    if os.path.isabs(link_path):
+        L_PATH = link_path
+    else:
+        L_PATH = os.path.join(FILE_DIR, link_path)
+    category = subdir(str(L_PATH))
+    csv = os.path.join(FILE_DIR, 'image-link.csv')
+    datafr = pd.read_csv(csv, index_col=0).sort_index()
+    vprint(type(datafr))
+    s = [0] * len(category)
+    vprint(top_category)
+    filled = False
+    for c in top_category:
+        filled = True
+        s[c] = 1
+    vprint(s)
+    if filled:
+        ser = pd.Series(s, index=category, dtype=int)
+        vprint(ser)
+        datafr.loc[img_path] = ser
+        vprint(datafr.loc[img_path])
+        datafr.to_csv(csv)
+
+
 if __name__ == "__main__":
+    global cat_result
     if is_link_to_csv:
         links_to_csv(train_path, image_path)
     if is_csv_to_link:
         csv_to_links(train_path, image_path)
-    asdf(train_path, model_name, image_file, remove_model)
+    if predict:
+        cat_result = asdf(train_path, model_name, image_file, remove_model)
+        print(cat_result)
+    if is_add_to_csv and cat_result is not None:
+        add_to_csv(image_file, train_path, cat_result)
     # imagenet('xception')
     # imagenet('mobilenet')
     # imagenet('resnet50')
