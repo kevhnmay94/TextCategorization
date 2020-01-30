@@ -1,21 +1,22 @@
 #! python
 from __future__ import absolute_import, division, print_function, unicode_literals
-import os, sys
-from pathlib import Path
-import time
 
-import tensorflow as tf
+import os
+import sys
+import time
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from tensorflow.keras import datasets, models
 from tensorflow.keras.applications import Xception, xception, MobileNetV2, mobilenet_v2, ResNet50, resnet50, \
     InceptionV3, inception_v3
-from tensorflow.keras import datasets, models
+from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D, GlobalAveragePooling2D
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.preprocessing.image import load_img
-from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D, GlobalAveragePooling2D
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
 
 fitModel = False
 plotOn = False
@@ -457,7 +458,7 @@ def asdf(path, model_name, img_path, remove_model):
 
         # we need to recompile the model for these modifications to take effect
         # we use SGD with a low learning rate
-        from tensorflow.keras.optimizers import SGD, Adam
+        from tensorflow.keras.optimizers import Adam
         # model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy')
         model.compile(optimizer=Adam(lr=0.0001), loss='categorical_crossentropy')
         model.fit_generator(train_data_gen, steps_per_epoch=train_data_gen.samples, validation_data=val_data_gen,
@@ -564,7 +565,6 @@ def add_to_csv(img_path, link_path, top_category):
 
 
 if __name__ == "__main__":
-    global cat_result
     if is_link_to_csv:
         links_to_csv(train_path, image_path)
     if is_csv_to_link:
