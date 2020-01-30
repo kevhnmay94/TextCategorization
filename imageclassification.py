@@ -61,7 +61,7 @@ for i, s in enumerate(sys.argv[1:]):
             is_add_to_csv = True
         elif arg == 'top-category':
             import ast
-            cat_result = ast.literal_eval(sys.argv[i + 2])
+            cat_result = ast.literal_eval(sys.argv[i+2])
 
     elif s[0] == '-':
         for arg in s[1:]:
@@ -90,7 +90,6 @@ def subdir(parent: str):
     category = [x[1] for x in os.walk(parent)][0]
     b = sorted(category)
     return b
-
 
 def asdf(path, model_name, img_path, remove_model):
     global fitModel, plotOn
