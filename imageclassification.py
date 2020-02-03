@@ -6,21 +6,9 @@ import sys
 import time
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from tensorflow.keras import datasets, models
-from tensorflow.keras.applications import Xception, xception, MobileNetV2, mobilenet_v2, ResNet50, resnet50, \
-    InceptionV3, inception_v3
-from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D, GlobalAveragePooling2D
-from tensorflow.keras.models import Sequential, Model
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.preprocessing.image import load_img
-
 fitModel = False
 plotOn = False
-verbose = True
+verbose = False
 image_file = None
 train_path = 'konten/kategori'
 image_path = 'konten/image'
@@ -31,7 +19,6 @@ remove_model = False
 is_add_to_csv = False
 predict = True
 cat_result = None
-
 
 def vprint(*data):
     if verbose:
@@ -79,6 +66,23 @@ for i, s in enumerate(sys.argv[1:]):
                 plotOn = False
             elif 'r' == arg:
                 remove_model = True
+
+if not verbose:
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from tensorflow.keras import datasets, models
+from tensorflow.keras.applications import Xception, xception, MobileNetV2, mobilenet_v2, ResNet50, resnet50, \
+    InceptionV3, inception_v3
+from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D, GlobalAveragePooling2D
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.preprocessing.image import load_img
+
 
 FILE_DIR = str(Path(sys.argv[0]).parent) + str(os.sep)
 
