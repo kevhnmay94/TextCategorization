@@ -68,6 +68,7 @@ for i, s in enumerate(sys.argv[1:]):
                 remove_model = True
 
 if not verbose:
+    # shut TF up!!!
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import matplotlib.pyplot as plt
