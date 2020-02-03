@@ -69,7 +69,7 @@ for i, s in enumerate(sys.argv[1:]):
 
 if not verbose:
     # shut TF up!!!
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import matplotlib.pyplot as plt
 import numpy as np
