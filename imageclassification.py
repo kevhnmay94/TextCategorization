@@ -69,7 +69,7 @@ for i, s in enumerate(sys.argv[1:]):
 
 if not verbose:
     # shut TF up!!!
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import numpy as np
 import pandas as pd
@@ -334,6 +334,7 @@ if __name__ == "__main__":
         csv_to_links(train_path, image_path)
     if predict:
         cat_result = asdf(train_path, model_name, image_file, remove_model)
-        print(cat_result)
+        if cat_result is not None:
+            print(cat_result)
     if is_add_to_csv and cat_result is not None:
         add_to_csv(image_file, train_path, cat_result)
