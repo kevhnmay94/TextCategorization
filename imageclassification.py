@@ -1,4 +1,4 @@
-#! python
+# insert shebangs here #
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
@@ -71,7 +71,6 @@ if not verbose:
     # shut TF up!!!
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -86,10 +85,8 @@ from tensorflow.keras.preprocessing.image import load_img
 
 
 FILE_DIR = str(Path(sys.argv[0]).parent) + str(os.sep)
-
-if image_file is None:
-    image_file = "cats_and_dogs_filtered/pot4.jpg"
-
+FILE_DIR = os.path.abspath(FILE_DIR)
+vprint(FILE_DIR)
 
 def subdir(parent: str):
     category = [x[1] for x in os.walk(parent)][0]
@@ -109,8 +106,8 @@ def asdf(path, model_name, img_path, remove_model):
         dir = os.path.join(PATH, c)
         num_dir = len(os.listdir(dir))
         total_item += num_dir
-    batch_size = 10
-    epochs = 15
+    batch_size = 5
+    epochs = 30
     if model_name == 'xception' or model_name == 'inception':
         IMG_HEIGHT = 299
         IMG_WIDTH = 299
@@ -137,8 +134,34 @@ def asdf(path, model_name, img_path, remove_model):
     except IOError as err:
         vprint(err)
         model = None
-        fitModel = True
+    if model is None or remove_model or fitModel:
+        image_generator = ImageDataGenerator(rescale=1. / 255,
+                                             rotation_range=45,
+                                             width_shift_range=.15,
+                                             height_shift_range=.15,
+                                             horizontal_flip=True,
+                                             zoom_range=0.5,
+                                             validation_split=0.2
+                                             )  # Generator for our training data
+        train_data_gen = image_generator.flow_from_directory(batch_size=batch_size,
+                                                             directory=PATH,
+                                                             shuffle=True,
+                                                             target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                             class_mode='categorical',
+                                                             subset='training'
+                                                             )
+        val_data_gen = image_generator.flow_from_directory(batch_size=batch_size,
+                                                           directory=PATH,
+                                                           shuffle=True,
+                                                           target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                           class_mode='categorical',
+                                                           subset='validation'
+                                                           )
+        import math
+        steps = math.ceil(train_data_gen.samples / batch_size)
+        val_steps = math.ceil(val_data_gen.samples / batch_size)
     if model is None or remove_model:
+        fitModel = True
         base_model = None
         if model_name == 'xception':
             base_model = Xception(weights='imagenet', include_top=False)
@@ -173,31 +196,9 @@ def asdf(path, model_name, img_path, remove_model):
 
         # compile the model (should be done *after* setting layers to non-trainable)
         model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
+        model.fit_generator(train_data_gen, steps_per_epoch=steps, validation_data=val_data_gen,
+                            validation_steps=val_steps, epochs=epochs)
     if fitModel:
-        image_generator = ImageDataGenerator(rescale=1. / 255,
-                                             rotation_range=45,
-                                             width_shift_range=.15,
-                                             height_shift_range=.15,
-                                             horizontal_flip=True,
-                                             zoom_range=0.5,
-                                             validation_split=0.2
-                                             )  # Generator for our training data
-        train_data_gen = image_generator.flow_from_directory(batch_size=batch_size,
-                                                             directory=PATH,
-                                                             shuffle=True,
-                                                             target_size=(IMG_HEIGHT, IMG_WIDTH),
-                                                             class_mode='categorical',
-                                                             subset='training'
-                                                             )
-        val_data_gen = image_generator.flow_from_directory(batch_size=batch_size,
-                                                           directory=PATH,
-                                                           shuffle=True,
-                                                           target_size=(IMG_HEIGHT, IMG_WIDTH),
-                                                           class_mode='categorical',
-                                                           subset='validation'
-                                                           )
-        model.fit_generator(train_data_gen, steps_per_epoch=train_data_gen.samples, validation_data=val_data_gen,
-                            validation_steps=val_data_gen.samples, epochs=epochs)
         # at this point, the top layers are well trained and we can start fine-tuning
         # convolutional layers from inception V3. We will freeze the bottom N layers
         # and train the remaining top layers.
@@ -215,8 +216,8 @@ def asdf(path, model_name, img_path, remove_model):
         from tensorflow.keras.optimizers import Adam
         # model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy')
         model.compile(optimizer=Adam(lr=0.0001), loss='categorical_crossentropy')
-        model.fit_generator(train_data_gen, steps_per_epoch=train_data_gen.samples, validation_data=val_data_gen,
-                            validation_steps=val_data_gen.samples, epochs=epochs)
+        model.fit_generator(train_data_gen, steps_per_epoch=steps, validation_data=val_data_gen,
+                            validation_steps=val_steps, epochs=epochs)
         model.save(FILE_DIR + 'asdf.pkl')
     if img_path is not None:
         if not os.path.isabs(img_path):
@@ -232,12 +233,17 @@ def asdf(path, model_name, img_path, remove_model):
         sortarr = arr.argsort()[::-1][:3]
         vprint(sortarr)
         vprint('Predictions:')
+        result = []
         for a in sortarr:
-            print(category[a], ": ", f'{arr[a]:.2f}')
-        return sortarr
+            result.append({'category': category[a], 'value': arr[a].astype(float)})
+            vprint(category[a], ": ", f'{arr[a]:.2f}')
+        import json
+        result = json.dumps(result)
+        return result
 
 
 def links_to_csv(link_path, image_path):
+    vprint("Link to csv mode")
     if os.path.isabs(link_path):
         L_PATH = link_path
     else:
@@ -262,6 +268,7 @@ def links_to_csv(link_path, image_path):
 
 
 def csv_to_links(link_path, image_path):
+    vprint("Csv to link mode")
     if os.path.isabs(link_path):
         L_PATH = link_path
     else:
@@ -271,14 +278,16 @@ def csv_to_links(link_path, image_path):
     else:
         I_PATH = os.path.join(FILE_DIR, image_path)
     vprint(L_PATH)
-    category = subdir(str(L_PATH))
     csv = os.path.join(FILE_DIR, 'image-link.csv')
     datafr = pd.read_csv(csv, index_col=0).sort_index()
+    category = datafr.columns.values
+    vprint("Category from csv: " ,category)
     index = datafr.index.values
     for i in index:
         for c in category:
             C_PATH = os.path.join(L_PATH, c)
             if not os.path.exists(C_PATH):
+                vprint("Directory not exist, creating...")
                 os.mkdir(C_PATH)
             CI_PATH = os.path.join(C_PATH, i)
             S_PATH = os.path.join(I_PATH, i)
