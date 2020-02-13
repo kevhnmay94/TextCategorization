@@ -39,7 +39,8 @@ def prepare(corpus_input: DataFrame, path, write_corpus=True, fit_corpus=True, f
     partialTrain = partial
     vprint('Preparing train and test data sets...')
     test_size = 0.25 if fitTrainModel else corpus['text_final'].size - 1
-    Train_X, Test_X, Train_Y, Test_Y = model_selection.train_test_split(corpus['text_final'], corpus['category'],
+    # Train_X, Test_X, Train_Y, Test_Y = model_selection.train_test_split(corpus['text_final'], corpus['category'],
+    Train_X, Test_X, Train_Y, Test_Y = model_selection.train_test_split(corpus['text_final'], corpus['story_id'],
                                                                         test_size=test_size)
     vprint('Encoding labels...')
 
