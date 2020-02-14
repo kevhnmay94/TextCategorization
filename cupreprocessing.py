@@ -20,7 +20,7 @@ def write_corpus(path, fix_contractions=False, verbose=False):
     nltk.download('wordnet')
     nltk.download('averaged_perceptron_tagger')
     nltk.download('stopwords')
-    corpus = pd.read_csv("/Users/rfr/PycharmProjects/TextCategorization/dataset_final_cu.csv")
+    corpus = pd.read_csv(path+"dataset_final_cu_raw.csv")
     print("Test baca corpus")
     corpus['text'] = corpus['f_pin'] + " " + corpus["title"]+" "+corpus["description"]
     print("Test baca corpus 2 ",corpus["text"])
@@ -48,7 +48,7 @@ def write_corpus(path, fix_contractions=False, verbose=False):
         corpus.loc[index, 'text_final'] = str(Final_words)
 
     corpus = corpus.loc[:, ['story_id', 'text_final']]
-    corpus.to_csv(path + 'dataset_final_cu.csv')
+    corpus.to_csv(path + 'dataset_final_cu-preprocessing.csv')
     return corpus
 
 

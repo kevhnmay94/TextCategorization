@@ -143,7 +143,7 @@ if writeCorpus:
     corpus = None
 else:
     try:
-        corpus = pd.read_csv("/Users/rfr/PycharmProjects/TextCategorization/dataset_final_cu.csv")
+        corpus = pd.read_csv(path+"dataset_final_cu_raw.csv")
     except FileNotFoundError:
         corpus = None
 if corpus is None or writeCorpus:
