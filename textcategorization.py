@@ -156,6 +156,11 @@ if corpus is None or writeCorpus:
     fitTrainModel = True
     corpus = mypreprocessing.write_corpus(path, fix_contractions=False)
 
+if (not useScikit) and (not useKeras):
+    useScikit = True
+if (not useScikitMNB) and (not useScikitSVM) and (not useScikitMLP):
+    useScikitMLP = True
+
 if useScikit:
     test_str = None
     vprint("Headline: ",headline)
