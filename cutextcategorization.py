@@ -1,12 +1,14 @@
 #! python
-import pandas as pd
-import numpy as np
-import scikitprocessing
-import kerasprocessing
-import cupreprocessing
+import os
 import sys
 from pathlib import Path
-import os
+
+import numpy as np
+import pandas as pd
+
+import cupreprocessing
+import kerasprocessing
+import scikitprocessing
 
 path = str(Path(sys.argv[0]).parent) + str(os.sep)
 MNB_FILENAME = path + 'mnb_classifier.pkl'
@@ -35,7 +37,11 @@ def vprint(*data):
         print(*data)
 
 
+skipArg = False
 for i,s in enumerate(sys.argv[1:]):
+    if(skipArg):
+        skipArg = False
+        continue
     if s[:2] == '--':
         arg = s[2:]
         if arg == 'train':
@@ -58,10 +64,13 @@ for i,s in enumerate(sys.argv[1:]):
             partialTrain = False
         elif arg == 'headline':
             headline = sys.argv[i+2]
+            skipArg = True
         elif arg == 'content':
             content = sys.argv[i+2]
+            skipArg = True
         elif arg == 'f_pin':
             f_pin = sys.argv[i+2]
+            skipArg = True
         if useScikit:
             if arg == 'mlp':
                 useScikitMLP = True
