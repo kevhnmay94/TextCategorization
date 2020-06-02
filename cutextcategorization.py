@@ -1,4 +1,5 @@
 #! python
+import pymysql.cursors
 import pandas as pd
 import numpy as np
 import scikitprocessing
@@ -28,6 +29,7 @@ content = None
 f_pin = None
 probaResult = True
 partialTrain = True
+fetchSQL = True
 
 
 def vprint(*data):
@@ -139,8 +141,34 @@ if not trainMode:
     writeCorpus = False
 
 np.random.seed()
+
+def fSQL():
+    try:
+        with open("database.txt") as f:
+            props = [line.rstrip() for line in f]
+
+        # Connect to the database
+        connection = pymysql.connect(host=props[0],
+                                     user=props[1],
+                                     password=props[2],
+                                     db=props[3])
+
+        query = props[4]
+        data = pd.read_sql(query, connection)
+        data.rename(columns={'POST_ID':'story_id','F_PIN':'f_pin','TITLE':'title','DESCRIPTION':'description'},inplace=True)
+        connection.close()
+        return data
+    except IndexError as e:
+        vprint(e)
+        return None
+    except:
+        return None
+
+
 if writeCorpus:
     corpus = None
+elif fetchSQL:
+    corpus = fSQL()
 else:
     try:
         corpus = pd.read_csv(path+"dataset_final_cu_raw.csv")
