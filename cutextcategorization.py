@@ -14,7 +14,7 @@ MNB_FILENAME = path + 'mnb_classifier.pkl'
 SVM_FILENAME = path + 'svm_classifier.pkl'
 MLP_FILENAME = path + 'mlp_classifier.pkl'
 CORPUS_VECTOR = path + 'tfidf_vector.pkl'
-trainMode = True
+trainMode = False
 fitCorpus = False
 fitTrainModel = False
 writeCorpus = False
@@ -29,7 +29,7 @@ content = None
 f_pin = None
 probaResult = True
 partialTrain = True
-fetchSQL = True
+fetchSQL = False
 
 
 def vprint(*data):
@@ -171,12 +171,13 @@ elif fetchSQL:
     corpus = fSQL()
 else:
     try:
-        corpus = pd.read_csv(path+"dataset_final_cu_raw.csv")
+        corpus = pd.read_csv(path+"dataset_final_cu-preprocessing.csv")
     except FileNotFoundError:
         corpus = None
 if corpus is None or writeCorpus:
     writeCorpus = True
     fitTrainModel = True
+    partialTrain = False
     corpus = cupreprocessing.write_corpus(path, fix_contractions=False)
 
 if useScikit:
@@ -188,7 +189,7 @@ if useScikit:
         test_str = f_pin+" "+headline + " " + content
     vprint("Testing Result: ",test_str)
     scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
-                             fit_train_model=fitTrainModel, partial=True,
+                             fit_train_model=fitTrainModel, partial=partialTrain,
                              proba=probaResult, verbose=verbose, new_data=test_str)
     if useScikitMNB:
         result = scikitprocessing.test_mnb()

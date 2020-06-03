@@ -44,8 +44,7 @@ def prepare(corpus_input: DataFrame, path, write_corpus=True, fit_corpus=True, f
                                                                         test_size=test_size)
     vprint('Encoding labels...')
 
-    Train_Y_Encoded = Encoder.fit_transform(Train_Y)
-    Test_Y_Encoded = Encoder.fit_transform(Test_Y)
+    Encoder.fit_transform(corpus['story_id'])
     vprint(CORPUS_VECTOR)
     if write_corpus is True:
         Tfidf_vect = None
@@ -251,7 +250,8 @@ def test_mlp():
         c = mlp_model.predict_proba(unlabeled)
         vprint(c)
         arr = np.array(c[0])
-        d = Encoder.inverse_transform(arr.argsort()[::-1][:3])
+        sortd = arr.argsort()[::-1][:3]
+        d = Encoder.inverse_transform(sortd)
         vprint(d)
         c = mlp_model.predict(unlabeled)
         mlp_model.partial_fit(unlabeled,c)
