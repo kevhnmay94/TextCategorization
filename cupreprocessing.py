@@ -13,14 +13,17 @@ isVerbose = False
 np.random.seed()
 
 
-def write_corpus(path, fix_contractions=False, verbose=False):
+def write_corpus(path, corpus_raw=None, fix_contractions=False, verbose=False):
     global isVerbose
     isVerbose = verbose
     nltk.download('punkt')
     nltk.download('wordnet')
     nltk.download('averaged_perceptron_tagger')
     nltk.download('stopwords')
-    corpus = pd.read_csv(path+"dataset_final_cu_raw.csv")
+    if corpus_raw is None:
+        corpus = pd.read_csv(path="dataset_final_cu_raw.csv")
+    else:
+        corpus = corpus_raw
     print("Test baca corpus")
     corpus['text'] = corpus['f_pin'] + " " + corpus["title"]+" "+corpus["description"]
     print("Test baca corpus 2 ",corpus["text"])

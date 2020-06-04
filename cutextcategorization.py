@@ -14,14 +14,15 @@ MNB_FILENAME = path + 'mnb_classifier.pkl'
 SVM_FILENAME = path + 'svm_classifier.pkl'
 MLP_FILENAME = path + 'mlp_classifier.pkl'
 CORPUS_VECTOR = path + 'tfidf_vector.pkl'
-trainMode = False
-fitCorpus = False
-fitTrainModel = False
-writeCorpus = False
+trainMode = True
+fitCorpus = True
+fitTrainModel = True
+writeCorpus = True
 useScikit = True
 useScikitMNB = False
 useScikitSVM = False
-useScikitMLP = True
+useScikitMLP = False
+useCluster = True
 useKeras = False
 verbose = True
 headline = None
@@ -29,7 +30,7 @@ content = None
 f_pin = None
 probaResult = True
 partialTrain = True
-fetchSQL = False
+fetchSQL = True
 
 
 def vprint(*data):
@@ -167,8 +168,6 @@ def fSQL():
 
 if writeCorpus:
     corpus = None
-elif fetchSQL:
-    corpus = fSQL()
 else:
     try:
         corpus = pd.read_csv(path+"dataset_final_cu-preprocessing.csv")
@@ -178,7 +177,11 @@ if corpus is None or writeCorpus:
     writeCorpus = True
     fitTrainModel = True
     partialTrain = False
-    corpus = cupreprocessing.write_corpus(path, fix_contractions=False)
+    if fetchSQL:
+        corpus_raw = fSQL()
+        corpus = cupreprocessing.write_corpus(path,corpus_raw=corpus_raw)
+    else:
+        corpus = cupreprocessing.write_corpus(path, fix_contractions=False)
 
 if useScikit:
     test_str = None
@@ -188,7 +191,11 @@ if useScikit:
     if f_pin is not None and headline is not None and content is not None:
         test_str = f_pin+" "+headline + " " + content
     vprint("Testing Result: ",test_str)
-    scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
+    if useCluster:
+        scikitprocessing.prepare_cluster(corpus, corpus_raw, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
+                                         fit_train_model=fitTrainModel, verbose=verbose, new_data=test_str)
+    else:
+        scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
                              fit_train_model=fitTrainModel, partial=partialTrain,
                              proba=probaResult, verbose=verbose, new_data=test_str)
     if useScikitMNB:
@@ -197,16 +204,19 @@ if useScikit:
         result = scikitprocessing.test_svm()
     if useScikitMLP:
         result = scikitprocessing.test_mlp()
-    if isinstance(result, list):
-        print(result[0])
-        if f_pin is not None and headline is not None and content is not None:
-            dataset = pd.DataFrame(data={'story_id': result[1],'f_pin':[f_pin], 'title': [headline], 'description': [content]})
-            dataset.to_csv(path + 'dataset-all-cu.csv',mode='a',header=False,index=False)
-    else:
-        print(result)
-        if f_pin is not None and headline is not None and content is not None:
-            dataset = pd.DataFrame(data={'story_id': [result],'f_pin':[f_pin], 'title': [headline], 'description': [content]})
-            dataset.to_csv(path + 'dataset-all-cu.csv',mode='a',header=False,index=False)
+    if useCluster:
+        result = scikitprocessing.cluster()
+    if result is not None:
+        if isinstance(result, list):
+            print(result[0])
+            if f_pin is not None and headline is not None and content is not None:
+                dataset = pd.DataFrame(data={'story_id': result[1],'f_pin':[f_pin], 'title': [headline], 'description': [content]})
+                dataset.to_csv(path + 'dataset-all-cu.csv',mode='a',header=False,index=False)
+        else:
+            print(result)
+            if f_pin is not None and headline is not None and content is not None:
+                dataset = pd.DataFrame(data={'story_id': [result],'f_pin':[f_pin], 'title': [headline], 'description': [content]})
+                dataset.to_csv(path + 'dataset-all-cu.csv',mode='a',header=False,index=False)
 
 
 if useKeras:
