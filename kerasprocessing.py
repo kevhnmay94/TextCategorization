@@ -1,12 +1,11 @@
+import joblib
 import numpy as np
-from sklearn.preprocessing import LabelBinarizer
-from sklearn import model_selection
-from pandas import DataFrame
 import tensorflow as tf
-from tensorflow import keras
+from pandas import DataFrame
+from sklearn import model_selection
+from sklearn.preprocessing import LabelBinarizer
 from tensorflow.keras import layers, models
 from tensorflow.keras.preprocessing.text import Tokenizer
-import joblib
 
 CORPUS_VECTOR = 'tfidf_keras_vector.pkl'
 KERAS_FILENAME = 'keras_classifier.pkl'

@@ -1,13 +1,10 @@
 import sys
+from datetime import datetime, timedelta, time
 from urllib.request import Request, urlopen
 
+import dateparser
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta, time
-import crawler
-import dateparser
-import textsummarization
-import newspaper
 
 hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)'}
 

@@ -1,15 +1,13 @@
-import nltk
-import os
-import re
 import math
 import operator
-import sys
-from nltk.stem import WordNetLemmatizer
-from nltk.corpus import stopwords
-from nltk.tokenize import sent_tokenize,word_tokenize
-from newspaper import Article
-from googletrans import Translator
+import re
+
+import nltk
 import translators as translation
+from googletrans import Translator
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import sent_tokenize, word_tokenize
 
 # nltk.download('stopwords')
 # nltk.download('punkt')

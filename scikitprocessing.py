@@ -1,14 +1,13 @@
-from pandas import DataFrame
+import joblib
 import numpy as np
-from sklearn.preprocessing import LabelEncoder
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from pandas import DataFrame
+from sklearn import metrics
 from sklearn import model_selection, naive_bayes as nb_generator, svm as svm_generator
 from sklearn.cluster import KMeans
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neural_network import multilayer_perceptron
-from sklearn import metrics
-import joblib
-import pandas as pd
-import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder
+
 CORPUS_VECTOR = 'tfidf_vector.pkl'
 MNB_FILENAME = 'mnb_classifier.pkl'
 SVM_FILENAME = 'svm_classifier.pkl'

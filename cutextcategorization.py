@@ -1,16 +1,11 @@
 #! python
-import pymysql.cursors
-import pandas as pd
-import numpy as np
-import scikitprocessing
-import kerasprocessing
-import cupreprocessing
 import os
 import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pymysql.cursors
 
 import cupreprocessing
 import kerasprocessing

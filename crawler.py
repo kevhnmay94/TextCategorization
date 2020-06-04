@@ -2,15 +2,15 @@ import os
 import re
 import sys
 import urllib
-import PIL
 from urllib.error import HTTPError
-from urllib.request import Request, urlopen
 from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 from urllib.request import urlretrieve
+
 from bs4 import BeautifulSoup, PageElement
 from newspaper import Article, Config
-import textsummarization_baru
 
+import textsummarization_baru
 
 
 def extract_p_tags_text(p_blocks: PageElement):

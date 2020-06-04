@@ -1,20 +1,21 @@
 #! /usr/local/bin/python3.7
 import os
 import sys
+import time
+import urllib.parse
+from datetime import datetime
 from http.client import RemoteDisconnected, IncompleteRead
+from multiprocessing import Process, Manager
 from ssl import SSLEOFError
 from urllib.error import HTTPError
 from urllib.request import urlretrieve
-import urllib.parse
+
 import mysql.connector
 from newspaper import ArticleException
 
-import newsscraper
 import crawler
+import newsscraper
 import textsummarization
-from datetime import datetime
-import time
-from multiprocessing import Process, Manager
 
 mydb = mysql.connector.connect(
     host="202.158.33.27",
