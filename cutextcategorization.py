@@ -1,4 +1,10 @@
 #! python
+import pymysql.cursors
+import pandas as pd
+import numpy as np
+import scikitprocessing
+import kerasprocessing
+import cupreprocessing
 import os
 import sys
 from pathlib import Path
@@ -16,13 +22,14 @@ SVM_FILENAME = path + 'svm_classifier.pkl'
 MLP_FILENAME = path + 'mlp_classifier.pkl'
 CORPUS_VECTOR = path + 'tfidf_vector.pkl'
 trainMode = True
-fitCorpus = False
-fitTrainModel = False
-writeCorpus = False
+fitCorpus = True
+fitTrainModel = True
+writeCorpus = True
 useScikit = True
 useScikitMNB = False
 useScikitSVM = False
-useScikitMLP = True
+useScikitMLP = False
+useCluster = True
 useKeras = False
 verbose = True
 headline = None
@@ -30,6 +37,7 @@ content = None
 f_pin = None
 probaResult = True
 partialTrain = True
+fetchSQL = True
 
 
 def vprint(*data):
@@ -148,17 +156,46 @@ if not trainMode:
     writeCorpus = False
 
 np.random.seed()
+
+def fSQL():
+    try:
+        with open("database.txt") as f:
+            props = [line.rstrip() for line in f]
+
+        # Connect to the database
+        connection = pymysql.connect(host=props[0],
+                                     user=props[1],
+                                     password=props[2],
+                                     db=props[3])
+
+        query = props[4]
+        data = pd.read_sql(query, connection)
+        data.rename(columns={'POST_ID':'story_id','F_PIN':'f_pin','TITLE':'title','DESCRIPTION':'description'},inplace=True)
+        connection.close()
+        return data
+    except IndexError as e:
+        vprint(e)
+        return None
+    except:
+        return None
+
+
 if writeCorpus:
     corpus = None
 else:
     try:
-        corpus = pd.read_csv(path+"dataset_final_cu_raw.csv")
+        corpus = pd.read_csv(path+"dataset_final_cu-preprocessing.csv")
     except FileNotFoundError:
         corpus = None
 if corpus is None or writeCorpus:
     writeCorpus = True
     fitTrainModel = True
-    corpus = cupreprocessing.write_corpus(path, fix_contractions=False)
+    partialTrain = False
+    if fetchSQL:
+        corpus_raw = fSQL()
+        corpus = cupreprocessing.write_corpus(path,corpus_raw=corpus_raw)
+    else:
+        corpus = cupreprocessing.write_corpus(path, fix_contractions=False)
 
 if (not useScikit) and (not useKeras):
     useScikit = True
@@ -173,8 +210,12 @@ if useScikit:
     if f_pin is not None and headline is not None and content is not None:
         test_str = f_pin+" "+headline + " " + content
     vprint("Testing Result: ",test_str)
-    scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
-                             fit_train_model=fitTrainModel, partial=True,
+    if useCluster:
+        scikitprocessing.prepare_cluster(corpus, corpus_raw, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
+                                         fit_train_model=fitTrainModel, verbose=verbose, new_data=test_str)
+    else:
+        scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
+                             fit_train_model=fitTrainModel, partial=partialTrain,
                              proba=probaResult, verbose=verbose, new_data=test_str)
     if useScikitMNB:
         result = scikitprocessing.test_mnb()
@@ -182,16 +223,19 @@ if useScikit:
         result = scikitprocessing.test_svm()
     if useScikitMLP:
         result = scikitprocessing.test_mlp()
-    if isinstance(result, list):
-        print(result[0])
-        if f_pin is not None and headline is not None and content is not None:
-            dataset = pd.DataFrame(data={'story_id': result[1],'f_pin':[f_pin], 'title': [headline], 'description': [content]})
-            dataset.to_csv(path + 'dataset-all-cu.csv',mode='a',header=False,index=False)
-    else:
-        print(result)
-        if f_pin is not None and headline is not None and content is not None:
-            dataset = pd.DataFrame(data={'story_id': [result],'f_pin':[f_pin], 'title': [headline], 'description': [content]})
-            dataset.to_csv(path + 'dataset-all-cu.csv',mode='a',header=False,index=False)
+    if useCluster:
+        result = scikitprocessing.cluster()
+    if result is not None:
+        if isinstance(result, list):
+            print(result[0])
+            if f_pin is not None and headline is not None and content is not None:
+                dataset = pd.DataFrame(data={'story_id': result[1],'f_pin':[f_pin], 'title': [headline], 'description': [content]})
+                dataset.to_csv(path + 'dataset-all-cu.csv',mode='a',header=False,index=False)
+        else:
+            print(result)
+            if f_pin is not None and headline is not None and content is not None:
+                dataset = pd.DataFrame(data={'story_id': [result],'f_pin':[f_pin], 'title': [headline], 'description': [content]})
+                dataset.to_csv(path + 'dataset-all-cu.csv',mode='a',header=False,index=False)
 
 
 if useKeras:
