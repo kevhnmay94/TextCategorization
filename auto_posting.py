@@ -18,10 +18,10 @@ import newsscraper
 import textsummarization
 
 mydb = mysql.connector.connect(
-    host="202.158.33.27",
-    user="nup",
-    passwd="5m1t0l_aptR",
-    database="bwm_1"
+    host="",
+    user="",
+    passwd="",
+    database=""
 )
 TIMEOUT = 3000
 
