@@ -287,9 +287,9 @@ if useScikit:
         vprint("TEST MLP TIME: {}".format(elapse))
 
     if probaResult:
-        print(result[0])
-        print(result[2])
         if headline is not None and content is not None:
+            print(result[0][0])
+            print(result[2])
             dataset = pd.DataFrame(data={'category': result[1], 'headline': [headline], 'content': [content]})
             dataset.to_csv(path + 'dataset-all.csv',mode='a',header=False,index=False)
         elif useSQL:
@@ -300,10 +300,9 @@ if useScikit:
                 for category in a:
                     insertCategory(b,category)
                 deleteOthers(b)
-
-
-
-
+        else:
+            print(result[0])
+            print(result[2])
     else:
         print(result)
         if headline is not None and content is not None:
