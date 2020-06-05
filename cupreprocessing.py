@@ -22,7 +22,7 @@ def write_corpus(path, corpus_raw=None, fix_contractions=False, verbose=False):
     nltk.download('averaged_perceptron_tagger')
     nltk.download('stopwords')
     if corpus_raw is None:
-        corpus = pd.read_csv(path="dataset_final_cu_raw.csv")
+        corpus = pd.read_csv("dataset_final_cu_raw.csv")
     else:
         corpus = corpus_raw
     print("Test baca corpus")

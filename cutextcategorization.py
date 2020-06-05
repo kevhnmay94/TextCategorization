@@ -23,8 +23,8 @@ writeCorpus = True
 useScikit = True
 useScikitMNB = False
 useScikitSVM = False
-useScikitMLP = False
-useCluster = True
+useScikitMLP = True
+useCluster = False
 useKeras = False
 verbose = True
 headline = None
@@ -32,7 +32,7 @@ content = None
 f_pin = None
 probaResult = True
 partialTrain = True
-fetchSQL = True
+fetchSQL = False
 
 
 def vprint(*data):
