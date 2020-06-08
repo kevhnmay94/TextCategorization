@@ -229,9 +229,9 @@ def fetch_unlabeled_SQL():
             if x == z and int(y) == 3:
                 vprint("Sudah classified {}".format(x))
                 if n == 0:
-                    excluded = "{}".format(str(x))
+                    excluded = "'{}'".format(str(x))
                 else:
-                    excluded = excluded + ",{}".format(str(x))
+                    excluded = excluded + ",'{}'".format(str(x))
                 n = n + 1
     query = ""
     if excluded:
