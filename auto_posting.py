@@ -17,11 +17,14 @@ import crawler
 import newsscraper
 import textsummarization
 
+with open("database.txt") as f:
+    props = [line.rstrip() for line in f]
+
 mydb = mysql.connector.connect(
-    host="",
-    user="",
-    passwd="",
-    database=""
+    host=props[0],
+    user=props[1],
+    passwd=props[2],
+    database=props[3]
 )
 TIMEOUT = 3000
 
