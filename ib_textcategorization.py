@@ -216,7 +216,25 @@ def fetch_unlabeled_SQL():
     vprint('db others 2')
     millis = int(round(time.time() * 1000))
     nows = millis - 86400000
-    query = "select P.`POST_ID`, P.`TITLE`, P.`DESCRIPTION` from `POST` P,CONTENT_CATEGORY C WHERE P.POST_ID = C.POST_ID AND C.CATEGORY = {} AND CREATED_DATE >= {}".format(others,nows)
+    querycheck = "select C.`POST_ID`, P.`TITLE`, P.`DESCRIPTION`,COUNT(*) as occurences from `POST` P , `CONTENT_CATEGORY` C WHERE P.`POST_ID` = C.`POST_ID` AND P.`CREATED_DATE` >= {} group by C.`POST_ID` having COUNT(*) > 1".format(nows)
+    datacheck = pd.read_sql(querycheck, connection)
+    vprint(datacheck)
+    querycheck1 = "select C.`POST_ID`, P.`TITLE`, P.`DESCRIPTION` from `POST` P,`CONTENT_CATEGORY` C WHERE P.`POST_ID` = C.`POST_ID` AND C.`CATEGORY` = 4 AND P.`CREATED_DATE` >= {} group by C.`POST_ID`".format(nows)
+    datacheck1 = pd.read_sql(querycheck1, connection)
+    vprint(datacheck1)
+    excluded = ""
+    n = 0
+    for x, y in zip(datacheck['POST_ID'], datacheck['occurences']):
+        for z in datacheck1['POST_ID']:
+            if x == z and int(y) == 3:
+                vprint("Sudah classified {}".format(x))
+                if n == 0:
+                    excluded = "{}".format(str(x))
+                else:
+                    excluded = excluded + ",{}".format(str(x))
+                n = n + 1
+
+    query = "select P.`POST_ID`, P.`TITLE`, P.`DESCRIPTION` from `POST` P,`CONTENT_CATEGORY` C WHERE P.`POST_ID` = C.`POST_ID` AND P.`POST_ID` NOT IN ({}) AND C.CATEGORY = {} AND CREATED_DATE >= {}".format(excluded,others,nows)
     vprint('db data')
     data = pd.read_sql(query,connection)
     vprint('db data 2')
