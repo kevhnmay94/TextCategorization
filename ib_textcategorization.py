@@ -170,7 +170,7 @@ def insertCategory(post_id,category):
 
         with connection.cursor() as cursor:
             vprint("Post ID: {}, Category: {}".format(post_id,category_id))
-            sql = "INSERT INTO `CONTENT_CATEGORY` (`POST_ID`,`CATEGORY`) values (%s,%s)"
+            sql = "REPLACE INTO `CONTENT_CATEGORY` (`POST_ID`,`CATEGORY`) values (%s,%s)"
             cursor.execute(sql,(str(post_id),category_id))
 
         connection.commit()
@@ -321,9 +321,13 @@ if useScikit:
                 dataset = pd.DataFrame(data={'category': x, 'headline': y, 'content': z}, index=[0])
                 dataset.to_csv(path + 'dataset-all.csv', mode='a', header=False, index=False)
             for a,b in zip(result[0],unc['post_id'].tolist()):
+                isNews = False
                 for category in a:
                     insertCategory(b,category)
-                deleteOthers(b)
+                    if int(category) == 4:
+                        isNews = True
+                if isNews == False:
+                    deleteOthers(b)
         else:
             print(result[0])
             print(result[2])
