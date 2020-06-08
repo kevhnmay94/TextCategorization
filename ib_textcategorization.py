@@ -188,7 +188,7 @@ def deleteOthers(postID):
                                  db=props[3])
     try:
         with connection.cursor() as cursor:
-            sql = "DELETE FROM `CONTENT_CATEGORY` where `POST_ID` = %s AND `CATEGORY` = 15"
+            sql = "DELETE FROM `CONTENT_CATEGORY` where `POST_ID` = %s AND `CATEGORY` = 4"
             cursor.execute(sql,(str(postID)))
 
         connection.commit()
@@ -210,11 +210,13 @@ def fetch_unlabeled_SQL():
                                  password=props[2],
                                  db=props[3])
 
-    query = "SELECT * FROM CATEGORY where CODE = 'Others'"
+    query = "SELECT * FROM CATEGORY where CODE = 'News'"
     vprint('db others')
     others = pd.read_sql(query, connection)['ID'][0]
     vprint('db others 2')
-    query = "select P.`POST_ID`, P.`TITLE`, P.`DESCRIPTION` from `POST` P,CONTENT_CATEGORY C WHERE P.POST_ID = C.POST_ID AND C.CATEGORY = {}".format(others)
+    millis = int(round(time.time() * 1000))
+    nows = millis - 86400000
+    query = "select P.`POST_ID`, P.`TITLE`, P.`DESCRIPTION` from `POST` P,CONTENT_CATEGORY C WHERE P.POST_ID = C.POST_ID AND C.CATEGORY = {} AND CREATED_DATE >= {}".format(others,nows)
     vprint('db data')
     data = pd.read_sql(query,connection)
     vprint('db data 2')
