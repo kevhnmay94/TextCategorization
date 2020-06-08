@@ -233,8 +233,12 @@ def fetch_unlabeled_SQL():
                 else:
                     excluded = excluded + ",{}".format(str(x))
                 n = n + 1
+    query = ""
+    if not excluded:
+        query = "select P.`POST_ID`, P.`TITLE`, P.`DESCRIPTION` from `POST` P,`CONTENT_CATEGORY` C WHERE P.`POST_ID` = C.`POST_ID` AND P.`POST_ID` NOT IN ({}) AND C.`CATEGORY` = {} AND P.`CREATED_DATE` >= {}".format(excluded,others,nows)
+    else:
+        query = "select P.`POST_ID`, P.`TITLE`, P.`DESCRIPTION` from `POST` P,`CONTENT_CATEGORY` C WHERE P.`POST_ID` = C.`POST_ID` AND C.`CATEGORY` = {} AND P.`CREATED_DATE` >= {}".format(others,nows)
 
-    query = "select P.`POST_ID`, P.`TITLE`, P.`DESCRIPTION` from `POST` P,`CONTENT_CATEGORY` C WHERE P.`POST_ID` = C.`POST_ID` AND P.`POST_ID` NOT IN ({}) AND C.`CATEGORY` = {} AND P.`CREATED_DATE` >= {}".format(excluded,others,nows)
     vprint('db data')
     data = pd.read_sql(query,connection)
     vprint('db data 2')
