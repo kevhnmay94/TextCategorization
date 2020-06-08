@@ -234,7 +234,7 @@ def fetch_unlabeled_SQL():
                     excluded = excluded + ",{}".format(str(x))
                 n = n + 1
     query = ""
-    if not excluded:
+    if excluded:
         query = "select P.`POST_ID`, P.`TITLE`, P.`DESCRIPTION` from `POST` P,`CONTENT_CATEGORY` C WHERE P.`POST_ID` = C.`POST_ID` AND P.`POST_ID` NOT IN ({}) AND C.`CATEGORY` = {} AND P.`CREATED_DATE` >= {}".format(excluded,others,nows)
     else:
         query = "select P.`POST_ID`, P.`TITLE`, P.`DESCRIPTION` from `POST` P,`CONTENT_CATEGORY` C WHERE P.`POST_ID` = C.`POST_ID` AND C.`CATEGORY` = {} AND P.`CREATED_DATE` >= {}".format(others,nows)
