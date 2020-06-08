@@ -176,6 +176,28 @@ def insertCategory(post_id,category):
         connection.commit()
     finally:
         connection.close()
+def checkCategory(category):
+    category_id = 15
+    with open("database.txt") as f:
+        props = [line.rstrip() for line in f]
+
+    # Connect to the database
+    connection = pymysql.connect(host=props[0],
+                                 user=props[1],
+                                 password=props[2],
+                                 db=props[3])
+    try:
+        with connection.cursor() as cursor:
+            # Read a single record
+            sql = "SELECT `ID` FROM `CATEGORY` where `CODE` = %s"
+            cursor.execute(sql, (str(category),))
+            category_id = cursor.fetchone()[0]
+            # category_id = int(result)
+            return category_id
+
+        connection.commit()
+    finally:
+        connection.close()
 def deleteOthers(postID):
 
     with open("database.txt") as f:
@@ -324,7 +346,8 @@ if useScikit:
                 isNews = False
                 for category in a:
                     insertCategory(b,category)
-                    if int(category) == 4:
+                    cid = checkCategory(category)
+                    if int(cid) == 4:
                         isNews = True
                 if isNews == False:
                     deleteOthers(b)
