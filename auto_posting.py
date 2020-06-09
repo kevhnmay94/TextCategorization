@@ -15,7 +15,7 @@ from newspaper import ArticleException
 
 import crawler
 import newsscraper
-import textsummarization
+import textsummarization_baru
 
 with open("database.txt") as f:
     props = [line.rstrip() for line in f]
@@ -32,17 +32,22 @@ TIMEOUT = 3000
 def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, privacy_flag: int):
     try:
         text_block, title, image_src = crawler.crawl_article(url)
-        summary = textsummarization.summarize_text(text_block.replace("\n", " "), 1.0, 1000, 'auto')
+        title = textsummarization_baru.translate(title)
+        summary = textsummarization_baru.summarize_text(text_block.replace("\n", " "), 1.0, 1000, 'auto')
         if summary == "[Error] Error in summarizing article." or summary == "[Cannot summarize the article]":
             summary = "-"
         curtime_milli = int(round(time.time() * 1000))
         img_filename = ""
-        base_path_img = "/apps/cub/server/image"
+        # base_path_img = "/apps/devib/server/image"
+        base_path_img = "/apps/indonesiabisa/server/image"
         if image_src:
-            img_filename = "APST-" + f_pin + "-" + format(curtime_milli, 'X') + "-" + str(unique_id) + \
-                           os.path.splitext(os.path.basename(image_src.split("?")[0]))[-1]
-            full_filename = os.path.join(base_path_img, img_filename)
-            urlretrieve(image_src, full_filename)
+            n = 0
+            for image in image_src:
+                img_filename = "APST-" + f_pin + "-" + format(curtime_milli, 'X') + "-" + str(n) + "-" + str(unique_id) + \
+                               os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
+                full_filename = os.path.join(base_path_img, img_filename)
+                urlretrieve(image, full_filename)
+                n = n + 1
 
         post_id = f_pin + str(curtime_milli) + str(unique_id)
 
@@ -117,28 +122,31 @@ def get_post_news(row: list):
                     p.join()
 
             print("Posting links: " + str(len(post_tuple_list)))
-            query = "insert into POST(POST_ID, F_PIN, TITLE, DESCRIPTION, CREATED_DATE, PRIVACY, THUMB_ID, FILE_ID, LAST_UPDATE, LINK, FILE_TYPE, SCORE) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            select_cursor.executemany(
-                query,
-                post_tuple_list)
-            mydb.commit()
-            print("Links posted: " + str(len(post_tuple_list)))
+            query = "replace into POST(POST_ID, F_PIN, TITLE, DESCRIPTION, CREATED_DATE, PRIVACY, THUMB_ID, FILE_ID, LAST_UPDATE, LINK, FILE_TYPE, SCORE) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+            for element in post_tuple_list:
+                select_cursor.executemany(
+                    query,
+                    (element,))
+                mydb.commit()
+                print("Links posted: " + str(len(post_tuple_list)))
 
             post_url_tuples = [(post[1], post[9]) for post in post_tuple_list]
-            query_cat = "insert into AUTO_POST_LINKS(F_PIN,URL) values (%s,%s)"
-            select_cursor.executemany(
-                query_cat,
-                post_url_tuples)
-            mydb.commit()
+            query_cat = "replace into AUTO_POST_LINKS(F_PIN,URL) values (%s,%s)"
+            for element in post_url_tuples:
+                select_cursor.executemany(
+                    query_cat,
+                    (element,))
+                mydb.commit()
 
             post_cat_tuples = [(post[0], category_id) for post in post_tuple_list]
             # for pid in post_id_list:
             #     post_cat_tuples.append((pid, category_id))
-            query_cat = "insert into CONTENT_CATEGORY(POST_ID,CATEGORY) values (%s,%s)"
-            select_cursor.executemany(
-                query_cat,
-                post_cat_tuples)
-            mydb.commit()
+            query_cat = "replace into CONTENT_CATEGORY(POST_ID,CATEGORY) values (%s,%s)"
+            for element in post_cat_tuples:
+                select_cursor.executemany(
+                    query_cat,
+                    (element,))
+                mydb.commit()
 
             if len(post_tuple_list) > 0:
                 select_cursor.execute(
