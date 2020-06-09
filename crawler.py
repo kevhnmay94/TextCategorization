@@ -65,12 +65,12 @@ def download_article(url):
     # image_arr.sort()
     image_arr = sorted(image_arr, key=lambda k: k['size'])
     image_choice = []
-    if size > 2:
-        image_choice = [image_arr[len(image_arr)-1]['url'],image_arr[len(image_arr)-2]['url'],image_arr[len(image_arr)-3]['url']]
-    elif size == 2:
-        image_choice = [image_arr[len(image_arr) - 1]['url'], image_arr[len(image_arr) - 2]['url']]
-    else:
-        image_choice = [article.top_image]
+    # if size > 2:
+    #     image_choice = [image_arr[len(image_arr)-1]['url'],image_arr[len(image_arr)-2]['url'],image_arr[len(image_arr)-3]['url']]
+    # elif size == 2:
+    #     image_choice = [image_arr[len(image_arr) - 1]['url'], image_arr[len(image_arr) - 2]['url']]
+    # else:
+    image_choice = [article.top_image]
 
     return article.text, article.title, image_choice
 
