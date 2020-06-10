@@ -141,7 +141,7 @@ def get_post_news(row: list):
             post_cat_tuples = [(post[0], category_id) for post in post_tuple_list]
             # for pid in post_id_list:
             #     post_cat_tuples.append((pid, category_id))
-            query_cat = "replace into CONTENT_CATEGORY(POST_ID,CATEGORY) values (%s,%s)"
+            query_cat = "replace into CONTENT_CATEGORY(POST_ID,CATEGORY) values (%s,4)"
             for element in post_cat_tuples:
                 select_cursor.executemany(
                     query_cat,
