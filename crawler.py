@@ -327,6 +327,7 @@ def main():
             img_filename = img_filename.replace("/", " ").replace(":", " ")
             img_filename = re.sub(r"\s+", "_", img_filename)
             full_filename = os.path.join(basePathImg, img_filename)
+            full_filename = full_filename.replace("?","").replace("<","").replace(">","")
             urlretrieve(image, full_filename)
             n = n + 1
 
