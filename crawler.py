@@ -56,14 +56,14 @@ def download_article(url):
     article = Article(url,config = newspaper_config)
     article.download()
     article.parse()
-    image_arr = []
-    size = len(article.images)
-    if size > 1:
-        for image in article.images:
-            img_size = getsize(image)
-            image_arr.append({'url':image,'size':int(img_size)})
-    # image_arr.sort()
-    image_arr = sorted(image_arr, key=lambda k: k['size'])
+    # image_arr = []
+    # size = len(article.images)
+    # if size > 1:
+    #     for image in article.images:
+    #         img_size = getsize(image)
+    #         image_arr.append({'url':image,'size':int(img_size)})
+    # # image_arr.sort()
+    # image_arr = sorted(image_arr, key=lambda k: k['size'])
     image_choice = []
     # if size > 2:
     #     image_choice = [image_arr[len(image_arr)-1]['url'],image_arr[len(image_arr)-2]['url'],image_arr[len(image_arr)-3]['url']]
