@@ -38,7 +38,7 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
             summary = "-"
         curtime_milli = int(round(time.time() * 1000))
         img_filename = ""
-        # base_path_img = "/apps/devib/server/image"
+
         base_path_img = "/apps/indonesiabisa/server/image"
         if image_src:
             n = 0
