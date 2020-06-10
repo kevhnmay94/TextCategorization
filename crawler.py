@@ -70,7 +70,7 @@ def download_article(url):
     # elif size == 2:
     #     image_choice = [image_arr[len(image_arr) - 1]['url'], image_arr[len(image_arr) - 2]['url']]
     # else:
-    image_choice = [article.top_image]
+    image_choice.append(article.top_image)
 
     return article.text, article.title, image_choice
 
@@ -301,7 +301,7 @@ def main():
             txt_filename = basePathTxt + alias + ".txt"
         else:
             txt_filename = basePathTxt + domain + " - " + title.replace("/", "_") + ".txt"
-        file = open(txt_filename, "w+")
+        file = open(txt_filename, "w+",encoding="utf-8")
         file.write(text_block)
         file.close()
 
@@ -312,24 +312,38 @@ def main():
             sum_filename = basePathSum + domain + " - " + title.replace("/", "_") + ".txt"
         summary = textsummarization_baru.summarize_text(text_block, summary_max_ratio, summary_max_char)
         if not summary.startswith("["):
-            fileSum = open(sum_filename, "w+")
+            fileSum = open(sum_filename, "w+",encoding="utf-8")
             fileSum.write(summary)
             fileSum.close()
 
     img_filename = "[]"
     if image_src:
         n = 0
-        for image in image_src:
+        print("Type : {}".format(type(image_src)))
+        if type(image_src) == str:
             if alias:
-                img_filename = alias + os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
+                img_filename = alias + os.path.splitext(os.path.basename(image_src.split("?")[0]))[-1]
             else:
-                img_filename = domain + " - " + title + "-" + str(n) + "-" + os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
+                img_filename = domain + " - " + title + "-" + str(n) + "-" + \
+                               os.path.splitext(os.path.basename(image_src.split("?")[0]))[-1]
             img_filename = img_filename.replace("/", " ").replace(":", " ")
             img_filename = re.sub(r"\s+", "_", img_filename)
             full_filename = os.path.join(basePathImg, img_filename)
-            full_filename = full_filename.replace("?","").replace("<","").replace(">","")
-            urlretrieve(image, full_filename)
-            n = n + 1
+            full_filename = full_filename.replace("?", "").replace("<", "").replace(">", "")
+            urlretrieve(image_src, full_filename)
+        elif type(image_src) == list:
+            for image in image_src:
+                print("image : {}".format(image))
+                if alias:
+                    img_filename = alias + os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
+                else:
+                    img_filename = domain + " - " + title + "-" + str(n) + "-" + os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
+                img_filename = img_filename.replace("/", " ").replace(":", " ")
+                img_filename = re.sub(r"\s+", "_", img_filename)
+                full_filename = os.path.join(basePathImg, img_filename)
+                full_filename = full_filename.replace("?","").replace("<","").replace(">","")
+                urlretrieve(image, full_filename)
+                n = n + 1
 
     if not title:
         title = "[Cannot fetch the title]"
