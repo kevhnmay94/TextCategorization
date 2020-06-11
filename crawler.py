@@ -12,6 +12,57 @@ from newspaper import Article, Config
 
 import textsummarization_baru
 
+def findClosest(arr, n, target):
+    # Corner cases
+    if (target <= arr[0]['size']):
+        return arr[0]['size']
+    if (target >= arr[n - 1]['size']):
+        return arr[n - 1]['size']
+
+        # Doing binary search
+    i = 0
+    j = n
+    mid = 0
+    while (i < j):
+        mid = round((i + j) / 2)
+
+        if (arr[mid]['size'] == target):
+            return arr[mid]['size']
+
+            # If target is less than array
+        # element, then search in left
+        if (target < arr[mid]['size']):
+
+            # If target is greater than previous
+            # to mid, return closest of two
+            if (mid > 0 and target > arr[mid - 1]['size']):
+                return getClosest(arr[mid - 1]['size'], arr[mid]['size'], target)
+
+                # Repeat for left half
+            j = mid
+
+            # If target is greater than mid
+        else:
+            if (mid < n - 1 and target < arr[mid + 1]['size']):
+                return getClosest(arr[mid]['size'], arr[mid + 1]['size'], target)
+
+                # update i
+            i = mid + 1
+
+    # Only single element left after search
+    return arr[mid]['size']
+
+
+# Method to compare which one is the more close.
+# We find the closest by taking the difference
+# between the target and both values. It assumes
+# that val2 is greater than val1 and target lies
+# between these two.
+def getClosest(val1, val2, target):
+    if (target - val1 >= val2 - target):
+        return val2
+    else:
+        return val1
 
 def extract_p_tags_text(p_blocks: PageElement):
     textblock = ""
@@ -56,21 +107,67 @@ def download_article(url):
     article = Article(url,config = newspaper_config)
     article.download()
     article.parse()
-    # image_arr = []
-    # size = len(article.images)
-    # if size > 1:
-    #     for image in article.images:
-    #         img_size = getsize(image)
-    #         image_arr.append({'url':image,'size':int(img_size)})
-    # # image_arr.sort()
+    image_arr = []
+    size = len(article.images)
+    if size > 1:
+        for image in article.images:
+            # print("images : {}".format(image))
+            extension = os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
+            # print("extension : {}".format(extension))
+            if (extension.casefold() == ".jpg".casefold() or extension.casefold() == ".jpeg".casefold()) and extension:
+                img_size = getsize(image)
+                image_arr.append({'url':image,'size':int(img_size)})
     # image_arr = sorted(image_arr, key=lambda k: k['size'])
+    # print("size image : {}".format(len(image_arr)))
+    valMean = 0
+    for x in image_arr:
+        if x['url'] == article.top_image:
+            valMean = x['size']
+    #         print("top image : {}".format(article.top_image))
+    #         print("url : {}".format(x['url']))
+    # print("mean : {}".format(valMean))
+    # print("image arr : {}".format(image_arr))
+    closestOne = findClosest(image_arr,len(image_arr),valMean)
+    # print("closest one : {}".format(closestOne))
+    closestOneURL = ""
+    valIndex = 0
+    for x in image_arr:
+        # print("x : {}".format(x))
+        # print(x['url'])
+        # print(x['size'])
+        # print(type(x['url']))
+        # print(type(x['size']))
+        # print(type(closestOne))
+        if int(x['size']) == int(closestOne):
+            closestOneURL = x['url']
+            valIndex = image_arr.index(x)
+    # print("index : {} {}".format(valIndex,closestOneURL))
+
+    image_temp = []
+    for a in image_arr:
+        if a['url'] != closestOneURL:
+            # print("A : {}".format(a))
+            image_temp.append(a)
+
+
+    closestTwoURL = ""
+    if len(image_arr) > 2:
+        closestTwo = findClosest(image_temp,len(image_temp),valMean)
+        for x in image_arr:
+            if x['size'] == closestTwo and x['url'] != closestOneURL:
+                closestTwoURL = x['url']
+                # print("closest two : {} {}".format(closestTwo, closestTwoURL))
+
     image_choice = []
-    # if size > 2:
-    #     image_choice = [image_arr[len(image_arr)-1]['url'],image_arr[len(image_arr)-2]['url'],image_arr[len(image_arr)-3]['url']]
-    # elif size == 2:
-    #     image_choice = [image_arr[len(image_arr) - 1]['url'], image_arr[len(image_arr) - 2]['url']]
-    # else:
-    image_choice.append(article.top_image)
+    if size > 2:
+        image_choice.append(article.top_image)
+        image_choice.append(closestOneURL)
+        image_choice.append(closestTwoURL)
+    elif size == 2:
+        image_choice.append(article.top_image)
+        image_choice.append(closestOneURL)
+    else:
+        image_choice.append(article.top_image)
 
     return article.text, article.title, image_choice
 
@@ -330,9 +427,10 @@ def main():
             fileSum.close()
 
     img_filename = "[]"
+    image_total = ""
     if image_src:
         n = 0
-        print("Type : {}".format(type(image_src)))
+        # print("Type : {}".format(type(image_src)))
         if type(image_src) == str:
             if alias:
                 img_filename = alias + os.path.splitext(os.path.basename(image_src.split("?")[0]))[-1]
@@ -344,9 +442,10 @@ def main():
             full_filename = os.path.join(basePathImg, img_filename)
             full_filename = full_filename.replace("?", "").replace("<", "").replace(">", "")
             urlretrieve(image_src, full_filename)
+            image_total = img_filename
         elif type(image_src) == list:
             for image in image_src:
-                print("image : {}".format(image))
+                # print("image : {}".format(image))
                 if alias:
                     img_filename = alias + os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
                 else:
@@ -356,13 +455,14 @@ def main():
                 full_filename = os.path.join(basePathImg, img_filename)
                 full_filename = full_filename.replace("?","").replace("<","").replace(">","")
                 urlretrieve(image, full_filename)
+                image_total = image_total + img_filename + "|"
                 n = n + 1
 
     if not title:
         title = "[Cannot fetch the title]"
     title = textsummarization_baru.translate(title)
     print(title)
-    print(image_src)
+    print(image_total)
     # print(len(image_src))
     print(summary)
     # print(text_block)
