@@ -5,6 +5,8 @@ from urllib.request import Request, urlopen
 import dateparser
 import requests
 from bs4 import BeautifulSoup
+# from selenium import webdriver
+# import geckodriver_autoinstaller
 
 hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64)'}
 
@@ -412,7 +414,6 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
             pass
         pass
     elif domain == "coindesk.com":
-        date_scraped = date_latest
         base = "https://www.coindesk.com"
         url = "https://www.coindesk.com/news"
         req = Request(url, headers=hdr)
@@ -421,7 +422,6 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
         head_news = soup.find("section", {"class": "featured-hub-content v3up"})
         article_cards = head_news.find_all("section",{"class": "article-card-fh"})
         for card in article_cards:
-            img_block = card.find("div",{"class": "card-img-block"})
             a = card.find("a")
             link = base+a.get("href")
             req = Request(link, headers=hdr)
@@ -435,7 +435,6 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
             print(datetime.timestamp(date_earliest))
             print(datetime.timestamp(date_latest))
             if datetime.timestamp(date) < datetime.timestamp(date_earliest):
-                got_news = False
                 break
             elif datetime.timestamp(date) < datetime.timestamp(date_latest):
                 if link not in news_list:
@@ -453,17 +452,38 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
             dtn = article_datetime.find("time").attrs.get("datetime")
             date = dateparser.parse(dtn)
             date = date + timedelta(hours=7)
-            print(link)
-            print(datetime.timestamp(date))
-            print(datetime.timestamp(date_earliest))
-            print(datetime.timestamp(date_latest))
             if datetime.timestamp(date) < datetime.timestamp(date_earliest):
-                got_news = False
                 break
             elif datetime.timestamp(date) < datetime.timestamp(date_latest):
                 if link not in news_list:
                     news_list.append(link)
             pass
+        pass
+    # elif domain == "theblockcrypto.com":
+    #     base = "https://www.theblockcrypto.com"
+    #     geckodriver_autoinstaller.install()
+    #     try:
+    #         browser = webdriver.Firefox()
+    #         browser.get(base)
+    #         html = browser.page_source
+    #         soup = BeautifulSoup(html, features="lxml")
+    #         story_feed = soup.find("div", {'class': 'storyFeed'})
+    #         articles = story_feed.find_all("article", {'class': 'border-white'})
+    #         for article in articles:
+    #             a = article.find("a")
+    #             link = base+a.get("href")
+    #             dt = article.find("h5", {'class': 'font-meta'}).text
+    #             date = dateparser.parse(dt)
+    #             if datetime.timestamp(date) < datetime.timestamp(date_earliest):
+    #                 break
+    #             elif datetime.timestamp(date) < datetime.timestamp(date_latest):
+    #                 if link not in news_list:
+    #                     news_list.append(link)
+    #             pass
+    #         pass
+    #     finally:
+    #         browser.close()
+
     # else:
     #     paper = newspaper.build('https://'+domain)
     #     for article in paper.articles:
@@ -497,7 +517,7 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
 # crawl the sites
 
 def main():
-    domain = "coindesk.com"
+    domain = "theblockcrypto.com"
     category = "news"
     date_start = datetime.now()
     date_end = date_start - timedelta(hours=1)
