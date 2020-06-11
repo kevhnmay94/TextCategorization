@@ -411,6 +411,59 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
                 got_news = False
             pass
         pass
+    elif domain == "coindesk.com":
+        date_scraped = date_latest
+        base = "https://www.coindesk.com"
+        url = "https://www.coindesk.com/news"
+        req = Request(url, headers=hdr)
+        html = urlopen(req, timeout=60)
+        soup = BeautifulSoup(html, features="lxml")
+        head_news = soup.find("section", {"class": "featured-hub-content v3up"})
+        article_cards = head_news.find_all("section",{"class": "article-card-fh"})
+        for card in article_cards:
+            img_block = card.find("div",{"class": "card-img-block"})
+            a = card.find("a")
+            link = base+a.get("href")
+            req = Request(link, headers=hdr)
+            html = urlopen(req, timeout=60)
+            html_soup = BeautifulSoup(html, features="lxml")
+            article_datetime = html_soup.find("div", {"class": "article-hero-datetime"})
+            dtn = article_datetime.find("time").attrs.get("datetime")
+            date = dateparser.parse(dtn)
+            print(link)
+            print(datetime.timestamp(date))
+            print(datetime.timestamp(date_earliest))
+            print(datetime.timestamp(date_latest))
+            if datetime.timestamp(date) < datetime.timestamp(date_earliest):
+                got_news = False
+                break
+            elif datetime.timestamp(date) < datetime.timestamp(date_latest):
+                if link not in news_list:
+                    news_list.append(link)
+            pass
+        story_stack = soup.find("div", {"class": "story-stack"})
+        item_wrappers = story_stack.find_all("div", {"class": "list-item-wrapper"})
+        for wrapper in item_wrappers:
+            a = wrapper.find("a",{"class":None})
+            link = base+a.get("href")
+            req = Request(link, headers=hdr)
+            html = urlopen(req, timeout=60)
+            html_soup = BeautifulSoup(html, features="lxml")
+            article_datetime = html_soup.find("div", {"class": "article-hero-datetime"})
+            dtn = article_datetime.find("time").attrs.get("datetime")
+            date = dateparser.parse(dtn)
+            date = date + timedelta(hours=7)
+            print(link)
+            print(datetime.timestamp(date))
+            print(datetime.timestamp(date_earliest))
+            print(datetime.timestamp(date_latest))
+            if datetime.timestamp(date) < datetime.timestamp(date_earliest):
+                got_news = False
+                break
+            elif datetime.timestamp(date) < datetime.timestamp(date_latest):
+                if link not in news_list:
+                    news_list.append(link)
+            pass
     # else:
     #     paper = newspaper.build('https://'+domain)
     #     for article in paper.articles:
@@ -444,14 +497,14 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
 # crawl the sites
 
 def main():
-    domain = "okezone.com"
+    domain = "coindesk.com"
     category = "news"
     date_start = datetime.now()
     date_end = date_start - timedelta(hours=1)
     latest = 0
     earliest = 0
-    latest_hour = -1
-    earliest_hour = -1
+    latest_hour = 4
+    earliest_hour = 10
 
     for i, s in enumerate(sys.argv[1:]):
         if s[:2] == '--':

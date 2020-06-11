@@ -214,6 +214,19 @@ def crawl_article(crawl_url: str):
             image_link_1 = str(img_block.get("src"))
         except (Exception,HTTPError):
             text_block_1, title_1, image_link_1 = download_article(crawl_url)
+    elif domain.endswith('coindesk.com'):
+        try:
+            title_block = soup.find("div", {"class": "article_hero_title"})
+            title_1 = title_block.find("h1", {"class": "heading"}).getText()
+
+            text_element = soup.find("section", {"class": "has-media news article-body"})
+            text_block_1 = extract_p_tags_text(text_element)
+
+            img_block = soup.find("div", {"class": "article-hero-media"})
+            image_link_1 = img_block.find("img")
+            image_link_1 = str(image_link_1.get("src"))
+        except (Exception,HTTPError):
+            text_block_1, title_1, image_link_1 = download_article(crawl_url)
     elif domain.endswith('amazon.com'):
         try:
             bullet_blocks = soup.find("div", {"id": "feature-bullets"})
