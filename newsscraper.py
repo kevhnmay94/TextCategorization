@@ -430,10 +430,6 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
             article_datetime = html_soup.find("div", {"class": "article-hero-datetime"})
             dtn = article_datetime.find("time").attrs.get("datetime")
             date = dateparser.parse(dtn)
-            print(link)
-            print(datetime.timestamp(date))
-            print(datetime.timestamp(date_earliest))
-            print(datetime.timestamp(date_latest))
             if datetime.timestamp(date) < datetime.timestamp(date_earliest):
                 break
             elif datetime.timestamp(date) < datetime.timestamp(date_latest):
@@ -517,7 +513,7 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
 # crawl the sites
 
 def main():
-    domain = "theblockcrypto.com"
+    domain = "coindesk.com"
     category = "news"
     date_start = datetime.now()
     date_end = date_start - timedelta(hours=1)
