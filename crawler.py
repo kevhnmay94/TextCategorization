@@ -80,7 +80,7 @@ basePathTxt = ""
 basePathSum = ""
 basePathImg = ""
 summary_max_ratio = 1.0
-summary_max_char = 1000
+summary_max_char = 512
 
 text_block = ""
 image_src = []

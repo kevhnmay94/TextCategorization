@@ -147,18 +147,57 @@ def summarize_text(input_text:str, max_length_ratio=0.0, max_length_character=0,
             break
     sentence_no.sort()
     cnt = 1
+    n = 1
     for sentence in tokenized_sentence:
         if cnt in sentence_no:
+            if n == 1:
+                sentence = "{}||".format(sentence)
             summary.append(sentence)
+            n = n + 1
         cnt = cnt + 1
     summary = " ".join(summary)
+    print("summary : {}".format(summary))
     if(len(summary)<=0):
         summary = "[Cannot summarize the article]"
 
+
     if language_true == 'id':
+        sentence_split = summary.split("||")
+        summary_stylized = []
+        x = 1
+        for sentence in sentence_split:
+            if "\n\n" in sentence:
+                sentence = sentence.replace("\n\n", ", ")
+
+            if "\n" in sentence:
+                sentence = sentence.replace("\n", ", ")
+            if x == 1:
+                sentence = "<b>{}</b>\n\n".format(sentence)
+            else:
+                sentence = "<i>{}</i>".format(sentence)
+            summary_stylized.append(sentence)
+            x = x + 1
+        summary = "".join(summary_stylized)
         return summary
     else:
         translated = translation.google(summary, from_language='en', to_language='id')
+        sentence_split = translated.split("||")
+        summary_stylized = []
+        x = 1
+        for sentence in sentence_split:
+            if "\n\n" in sentence:
+                sentence = sentence.replace("\n\n", ", ")
+
+            if "\n" in sentence:
+                sentence = sentence.replace("\n", ", ")
+
+            if x == 1:
+                sentence = "<b>{}</b>\n\n".format(sentence)
+            else:
+                sentence = "<i>{}</i>".format(sentence)
+            summary_stylized.append(sentence)
+            x = x + 1
+        translated = "".join(summary_stylized)
         return translated
         # translate_summary = translator.translate(summary,src='en', dest='id')
         # return translate_summary.text
