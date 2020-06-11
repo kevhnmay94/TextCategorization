@@ -313,7 +313,7 @@ def crawl_article(crawl_url: str):
             text_block_1, title_1, image_link_1 = download_article(crawl_url)
     elif domain.endswith('coindesk.com'):
         try:
-            title_block = soup.find("div", {"class": "article_hero_title"})
+            title_block = soup.find("div", {"class": "article-hero-title"})
             title_1 = title_block.find("h1", {"class": "heading"}).getText()
 
             text_element = soup.find("section", {"class": "has-media news article-body"})
