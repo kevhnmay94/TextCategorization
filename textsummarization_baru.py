@@ -150,13 +150,16 @@ def summarize_text(input_text:str, max_length_ratio=0.0, max_length_character=0,
     n = 1
     for sentence in tokenized_sentence:
         if cnt in sentence_no:
-            if n == 1:
-                sentence = "{}||".format(sentence)
+            if len(sentence_no) <= 3:
+                if n == 1:
+                    sentence = "{}||".format(sentence)
+            elif len(sentence_no) >= 4:
+                if n == 2:
+                    sentence = "{}||".format(sentence)
             summary.append(sentence)
             n = n + 1
         cnt = cnt + 1
     summary = " ".join(summary)
-    print("summary : {}".format(summary))
     if(len(summary)<=0):
         summary = "[Cannot summarize the article]"
 
