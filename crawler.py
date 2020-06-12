@@ -378,6 +378,11 @@ def crawl_article(crawl_url: str):
             title_1 = soup.find("h1",{"class":"article__headline"}).string
         except (Exception,HTTPError):
             text_block_1, title_1, image_link_1 = download_article(crawl_url)
+    elif domain.endswith('artnews.com'):
+        try:
+            text_block_1, title_1, image_link_1 = download_article(crawl_url)
+        except (Exception,HTTPError):
+            text_block_1, title_1, image_link_1 = download_article(crawl_url)
     else:
         text_block_1, title_1, image_link_1 = download_article(crawl_url)
     return text_block_1, title_1, image_link_1

@@ -455,6 +455,90 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
                     news_list.append(link)
             pass
         pass
+    elif domain == "artnews.com":
+        url = "https://www.artnews.com/c/art-news/news/"
+        req = Request(url, headers=hdr)
+        html = urlopen(req, timeout=30)
+        soup = BeautifulSoup(html, features="lxml")
+        article_block = soup.findAll("article")
+        for x in article_block:
+            apart = x.find("a")
+            article_link = apart.get("href")
+            not_news = x.find("a", {"class": "lrv-a-unstyle-link lrv-u-display-block"})
+            time = x.find("time", {"class": "c-timestamp"})
+            if not_news is None and time is not None:
+                month = ""
+                date = ""
+                year = ""
+                hour = ""
+                minute = ""
+                meridian = ""
+                time_date = str(time.text)
+                if "ago" not in time_date:
+                    monthday = time_date.split(",")
+                    month_day = monthday[0].split(" ")
+                    a = 0
+                    b = 0
+                    for i in month_day:
+                        if a == 0:
+                            month = str(i)
+                        else:
+                            date = str(i)
+                        a = a + 1
+                    yhmm = monthday[1].split(" ")
+                    year = yhmm[1]
+                    hm = yhmm[2]
+                    meridian = yhmm[3]
+                    hourmin = hm.split(":")
+                    for j in hourmin:
+                        if b == 0:
+                            hour = j
+                        else:
+                            minute = j
+                        b = b + 1
+
+                    if meridian.casefold() == "pm".casefold():
+                        hour_int = int(hour)
+                        hour_int = hour_int + 12
+                        if hour_int == 24:
+                            hour_int = 0
+                        hour = str(hour_int)
+
+                    if month.casefold() == "JAN".casefold():
+                        month = "1"
+                    elif month.casefold() == "FEB".casefold():
+                        month = "2"
+                    elif month.casefold() == "MAR".casefold():
+                        month = "3"
+                    elif month.casefold() == "APR".casefold():
+                        month = "4"
+                    elif month.casefold() == "MAY".casefold():
+                        month = "5"
+                    elif month.casefold() == "JUN".casefold():
+                        month = "6"
+                    elif month.casefold() == "JUL".casefold():
+                        month = "7"
+                    elif month.casefold() == "AUG".casefold():
+                        month = "8"
+                    elif month.casefold() == "SEP".casefold():
+                        month = "9"
+                    elif month.casefold() == "OCT".casefold():
+                        month = "10"
+                    elif month.casefold() == "NOV".casefold():
+                        month = "11"
+                    elif month.casefold() == "DEC".casefold():
+                        month = "12"
+
+                    dt = datetime(year=int(year), month=int(month), day=int(date), hour=int(hour), minute=int(minute))
+                    dt_millis = dt.timestamp() * 1000
+                    dt_now = datetime.now().timestamp() * 1000
+                    if dt_now - dt_millis <= 86400000:
+                        news_list.append(article_link)
+                pass
+            pass
+        pass
+
+
     # elif domain == "theblockcrypto.com":
     #     base = "https://www.theblockcrypto.com"
     #     geckodriver_autoinstaller.install()
