@@ -431,11 +431,12 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
             dtn = article_datetime.find("time").attrs.get("datetime")
             date = dateparser.parse(dtn)
             if datetime.timestamp(date) < datetime.timestamp(date_earliest):
-                break
+                pass
             elif datetime.timestamp(date) < datetime.timestamp(date_latest):
                 if link not in news_list:
                     news_list.append(link)
             pass
+        pass
         story_stack = soup.find("div", {"class": "story-stack"})
         item_wrappers = story_stack.find_all("div", {"class": "list-item-wrapper"})
         for wrapper in item_wrappers:
@@ -449,7 +450,7 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
             date = dateparser.parse(dtn)
             date = date + timedelta(hours=7)
             if datetime.timestamp(date) < datetime.timestamp(date_earliest):
-                break
+                pass
             elif datetime.timestamp(date) < datetime.timestamp(date_latest):
                 if link not in news_list:
                     news_list.append(link)
@@ -537,8 +538,28 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
                 pass
             pass
         pass
-
-
+    elif domain == "finextra.com":
+        base = "https://www.finextra.com"
+        url = "https://www.finextra.com/latest-news/startups"
+        req = Request(url, headers=hdr)
+        html = urlopen(req, timeout=60)
+        soup = BeautifulSoup(html, features="lxml")
+        storylist = soup.find("div",{"class": "modulegroup--latest-storylisting"})
+        storylist = storylist.find_all("div", {"class":"module--story"})
+        for story in storylist:
+            a = story.find("a")
+            link = base + a.get("href")
+            article_date = story.find("span",{"class":"news-date"}).text
+            date = dateparser.parse(article_date)
+            dt_e = date_earliest.replace(hour=0,minute=0,second=0)
+            dt_l = date_latest.replace(hour=0,minute=0,second=0)
+            if datetime.timestamp(date) < datetime.timestamp(dt_e):
+                pass
+            elif datetime.timestamp(date) <= datetime.timestamp(dt_l):
+                if link not in news_list:
+                    news_list.append(link)
+            pass
+        pass
     # elif domain == "theblockcrypto.com":
     #     base = "https://www.theblockcrypto.com"
     #     geckodriver_autoinstaller.install()
@@ -597,14 +618,14 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
 # crawl the sites
 
 def main():
-    domain = "coindesk.com"
+    domain = "finextra.com"
     category = "news"
     date_start = datetime.now()
     date_end = date_start - timedelta(hours=1)
     latest = 0
     earliest = 0
     latest_hour = 4
-    earliest_hour = 10
+    earliest_hour = 5
 
     for i, s in enumerate(sys.argv[1:]):
         if s[:2] == '--':

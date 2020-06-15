@@ -34,7 +34,7 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
     try:
         text_block, title, image_src = crawler.crawl_article(url)
         title = textsummarization_baru.translate(title)
-        summary = textsummarization_baru.summarize_text(text_block.replace("\n", " "), 1.0, 1000, 'auto')
+        summary = textsummarization_baru.summarize_text(text_block.replace("\n", " "), 1.0, 512, 'auto')
         if summary == "[Error] Error in summarizing article." or summary == "[Cannot summarize the article]":
             summary = "-"
         curtime_milli = int(round(time.time() * 1000))

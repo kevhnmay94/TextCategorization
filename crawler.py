@@ -324,6 +324,20 @@ def crawl_article(crawl_url: str):
             image_link_1 = str(image_link_1.get("src"))
         except (Exception,HTTPError):
             text_block_1, title_1, image_link_1 = download_article(crawl_url)
+    elif domain.endswith('finextra.com'):
+        try:
+            base = "https://www.finextra.com"
+            title_block = soup.find("div", {"class": "article--title"})
+            title_1 = title_block.find("h1").text
+
+            text_element = soup.find("div",{"id": "ctl00_ctl00_body_mainContent_NewsActicle_pnlBody"})
+            text_block_1 = text_element.text
+
+            img_block = soup.find("div", {"class": "article--image"})
+            image_link_1 = img_block.find("img")
+            image_link_1 = base + str(image_link_1.get("src"))
+        except (Exception,HTTPError):
+            text_block_1, title_1, image_link_1 = download_article(crawl_url)
     elif domain.endswith('amazon.com'):
         try:
             bullet_blocks = soup.find("div", {"id": "feature-bullets"})
