@@ -65,7 +65,7 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
             post_id, f_pin, urllib.parse.quote_plus(title), urllib.parse.quote_plus(summary), curtime_milli,
             privacy_flag,
             img_filename,
-            img_filename, curtime_milli, url, 1, 0.0)
+            img_filename, curtime_milli, url, 1, curtime_milli)
         post_list.append(post_values)
         print("Success in fetching " + url)
     except (HTTPError, RemoteDisconnected,ArticleException,IncompleteRead,SSLEOFError):
