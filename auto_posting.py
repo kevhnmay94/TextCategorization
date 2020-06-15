@@ -48,7 +48,7 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
                                os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
                 full_filename = os.path.join(base_path_img, img_filename)
                 urlretrieve(image, full_filename)
-                image_total = image_total + img_filename + "|"
+                # image_total = image_total + img_filename
                 n = n + 1
 
         post_id = f_pin + str(curtime_milli) + str(unique_id)
@@ -56,8 +56,8 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
         post_values = (
             post_id, f_pin, urllib.parse.quote_plus(title), urllib.parse.quote_plus(summary), curtime_milli,
             privacy_flag,
-            image_total,
-            image_total, curtime_milli, url, 1, curtime_milli)
+            img_filename,
+            img_filename, curtime_milli, url, 1, curtime_milli)
         post_list.append(post_values)
         print("Success in fetching " + url)
     except (HTTPError, RemoteDisconnected,ArticleException,IncompleteRead,SSLEOFError):
