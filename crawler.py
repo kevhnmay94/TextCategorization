@@ -109,65 +109,65 @@ def download_article(url):
     article.parse()
     image_arr = []
     size = len(article.images)
-    if size > 1:
-        for image in article.images:
-            # print("images : {}".format(image))
-            extension = os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
-            # print("extension : {}".format(extension))
-            if (extension.casefold() == ".jpg".casefold() or extension.casefold() == ".jpeg".casefold()) and extension:
-                img_size = getsize(image)
-                image_arr.append({'url':image,'size':int(img_size)})
+    # if size > 1:
+    #     for image in article.images:
+    #         # print("images : {}".format(image))
+    #         extension = os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
+    #         # print("extension : {}".format(extension))
+    #         if (extension.casefold() == ".jpg".casefold() or extension.casefold() == ".jpeg".casefold()) and extension:
+    #             img_size = getsize(image)
+    #             image_arr.append({'url':image,'size':int(img_size)})
     # image_arr = sorted(image_arr, key=lambda k: k['size'])
     # print("size image : {}".format(len(image_arr)))
-    valMean = 0
-    for x in image_arr:
-        if x['url'] == article.top_image:
-            valMean = x['size']
+    # valMean = 0
+    # for x in image_arr:
+    #     if x['url'] == article.top_image:
+    #         valMean = x['size']
     #         print("top image : {}".format(article.top_image))
     #         print("url : {}".format(x['url']))
     # print("mean : {}".format(valMean))
     # print("image arr : {}".format(image_arr))
-    closestOne = findClosest(image_arr,len(image_arr),valMean)
+    # closestOne = findClosest(image_arr,len(image_arr),valMean)
     # print("closest one : {}".format(closestOne))
-    closestOneURL = ""
-    valIndex = 0
-    for x in image_arr:
+    # closestOneURL = ""
+    # valIndex = 0
+    # for x in image_arr:
         # print("x : {}".format(x))
         # print(x['url'])
         # print(x['size'])
         # print(type(x['url']))
         # print(type(x['size']))
         # print(type(closestOne))
-        if int(x['size']) == int(closestOne):
-            closestOneURL = x['url']
-            valIndex = image_arr.index(x)
+        # if int(x['size']) == int(closestOne):
+        #     closestOneURL = x['url']
+        #     valIndex = image_arr.index(x)
     # print("index : {} {}".format(valIndex,closestOneURL))
 
-    image_temp = []
-    for a in image_arr:
-        if a['url'] != closestOneURL:
-            # print("A : {}".format(a))
-            image_temp.append(a)
+    # image_temp = []
+    # for a in image_arr:
+    #     if a['url'] != closestOneURL:
+    #         # print("A : {}".format(a))
+    #         image_temp.append(a)
 
 
-    closestTwoURL = ""
-    if len(image_arr) > 2:
-        closestTwo = findClosest(image_temp,len(image_temp),valMean)
-        for x in image_arr:
-            if x['size'] == closestTwo and x['url'] != closestOneURL:
-                closestTwoURL = x['url']
-                # print("closest two : {} {}".format(closestTwo, closestTwoURL))
+    # closestTwoURL = ""
+    # if len(image_arr) > 2:
+    #     closestTwo = findClosest(image_temp,len(image_temp),valMean)
+    #     for x in image_arr:
+    #         if x['size'] == closestTwo and x['url'] != closestOneURL:
+    #             closestTwoURL = x['url']
+    #             # print("closest two : {} {}".format(closestTwo, closestTwoURL))
 
     image_choice = []
-    if size > 2:
-        image_choice.append(article.top_image)
-        image_choice.append(closestOneURL)
-        image_choice.append(closestTwoURL)
-    elif size == 2:
-        image_choice.append(article.top_image)
-        image_choice.append(closestOneURL)
-    else:
-        image_choice.append(article.top_image)
+    # if size > 2:
+    #     image_choice.append(article.top_image)
+    #     image_choice.append(closestOneURL)
+    #     image_choice.append(closestTwoURL)
+    # elif size == 2:
+    #     image_choice.append(article.top_image)
+    #     image_choice.append(closestOneURL)
+    # else:
+    image_choice.append(article.top_image)
 
     return article.text, article.title, image_choice
 
