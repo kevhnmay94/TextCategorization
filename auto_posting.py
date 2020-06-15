@@ -26,6 +26,7 @@ mydb = mysql.connector.connect(
     passwd=props[2],
     database=props[3]
 )
+base_path_img = props[4]
 TIMEOUT = 3000
 
 
@@ -39,7 +40,7 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
         curtime_milli = int(round(time.time() * 1000))
         img_filename = ""
 
-        base_path_img = "/apps/indonesiabisa/server/image"
+        # base_path_img = "/apps/indonesiabisa/server/image"
         image_total = ""
         if image_src:
             n = 0
