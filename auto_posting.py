@@ -44,13 +44,20 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
         image_total = ""
         if image_src:
             n = 0
-            for image in image_src:
-                img_filename = "APST-" + f_pin + "-" + format(curtime_milli, 'X') + "-" + str(n) + "-" + str(unique_id) + \
-                               os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
+            if type(image_src) == list:
+                for image in image_src:
+                    img_filename = "APST-" + f_pin + "-" + format(curtime_milli, 'X') + "-" + str(n) + "-" + str(unique_id) + \
+                                   os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
+                    full_filename = os.path.join(base_path_img, img_filename)
+                    urlretrieve(image, full_filename)
+                    # image_total = image_total + img_filename
+                    n = n + 1
+            elif type(image_src) == str:
+                img_filename = "APST-" + f_pin + "-" + format(curtime_milli, 'X') + "-" + str(n) + "-" + str(
+                    unique_id) + \
+                               os.path.splitext(os.path.basename(image_src.split("?")[0]))[-1]
                 full_filename = os.path.join(base_path_img, img_filename)
-                urlretrieve(image, full_filename)
-                # image_total = image_total + img_filename
-                n = n + 1
+                urlretrieve(image_src, full_filename)
 
         post_id = f_pin + str(curtime_milli) + str(unique_id)
 
