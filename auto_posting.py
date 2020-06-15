@@ -58,7 +58,7 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
             post_id, f_pin, urllib.parse.quote_plus(title), urllib.parse.quote_plus(summary), curtime_milli,
             privacy_flag,
             img_filename,
-            img_filename, curtime_milli, url, 1, curtime_milli)
+            img_filename, curtime_milli, url, 1, 0.0)
         post_list.append(post_values)
         print("Success in fetching " + url)
     except (HTTPError, RemoteDisconnected,ArticleException,IncompleteRead,SSLEOFError):
@@ -76,7 +76,7 @@ def get_post_news(row: list):
     domain = row[2]
     category_id = row[3]
     last_update = row[4]
-    privacy = row[5]
+    privacy = "3"
 
     category = ""
     if category_id == 4:
