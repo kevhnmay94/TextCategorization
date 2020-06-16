@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 import scikitprocessing
-import kerasprocessing
+# import kerasprocessing
 import mypreprocessing
 import json
 import sys
@@ -26,6 +26,7 @@ useScikit = True
 useScikitMNB = False
 useScikitSVM = False
 useScikitMLP = True
+useCluster = False
 useKeras = False
 verbose = False
 headline = None
@@ -83,6 +84,10 @@ for i,s in enumerate(sys.argv[1:]):
                 useScikitMNB = True
             elif arg == 'no-mnb':
                 useScikitMNB = False
+            elif arg == 'cluster':
+                useCluster = True
+            elif arg == 'no-cluster':
+                useCluster = False
         if trainMode:
             if arg == 'fit-model':
                 fitTrainModel = True
@@ -315,12 +320,23 @@ if useScikit:
             exit()
     vprint("Test: ",test_str)
     start = time.time()
-    scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
+    if useCluster:
+        corpus_raw = pd.read_csv(path + "dataset-all.csv")
+        probaResult = False
+        scikitprocessing.prepare_cluster(corpus_input=corpus,corpus_raw=corpus_raw,path=path,write_corpus=writeCorpus,
+                                         fit_train_model=fitTrainModel,fit_corpus=fitCorpus,verbose=verbose,
+                                         new_data=test_str,cluster_label=True)
+    else:
+        scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
                              fit_train_model=fitTrainModel, partial=partialTrain,
                              proba=probaResult, verbose=verbose, new_data=test_str)
     end = time.time()
     elapse = end - start
     vprint("Prepare time: {}".format(elapse))
+    if useCluster:
+        result = scikitprocessing.cluster()
+        print(result)
+        exit()
     if useScikitMNB:
         result = scikitprocessing.test_mnb()
     if useScikitSVM:
@@ -365,6 +381,6 @@ if useScikit:
 
 
 
-if useKeras:
-    kerasprocessing.exec(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus, fit_train_model=fitTrainModel,
-                         verbose=verbose, new_data=test_str)
+# if useKeras:
+#     kerasprocessing.exec(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus, fit_train_model=fitTrainModel,
+#                          verbose=verbose, new_data=test_str)

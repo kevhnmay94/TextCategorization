@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-import kerasprocessing
+# import kerasprocessing
 import mypreprocessing
 import scikitprocessing
 
@@ -189,6 +189,6 @@ if useScikit:
             dataset.to_csv(path + 'dataset-all.csv',mode='a',header=False,index=False)
 
 
-if useKeras:
-    kerasprocessing.exec(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus, fit_train_model=fitTrainModel,
-                         verbose=verbose, new_data=test_str)
+# if useKeras:
+#     kerasprocessing.exec(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus, fit_train_model=fitTrainModel,
+#                          verbose=verbose, new_data=test_str)

@@ -7,6 +7,9 @@ from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neural_network import multilayer_perceptron
 from sklearn.preprocessing import LabelEncoder
+from collections import Counter
+import ast
+from nltk.corpus import stopwords,verbnet
 
 CORPUS_VECTOR = 'tfidf_vector.pkl'
 MNB_FILENAME = 'mnb_classifier.pkl'
@@ -28,9 +31,13 @@ isVerbose = False
 corpus = None
 partialTrain = True
 corpusRaw = None
+Tfidf_vect = None
 
-def prepare_cluster(corpus_input: DataFrame, corpus_raw: DataFrame, path, write_corpus=True, fit_train_model=True, fit_corpus=True, verbose=False, new_data=None):
-    global isVerbose, corpus, CLUSTER_FILENAME, probaPredict, Cluster_X_Tfidf, unlabeled, fitTrainModel, corpusRaw
+clustering_label = []
+
+def prepare_cluster(corpus_input: DataFrame, corpus_raw: DataFrame, path, write_corpus=True,
+                    fit_train_model=True, fit_corpus=True, verbose=False, new_data=None, cluster_label=False):
+    global isVerbose, corpus, CLUSTER_FILENAME, probaPredict, Cluster_X_Tfidf, unlabeled, fitTrainModel, corpusRaw, Tfidf_vect
     CLUSTER_FILENAME = path + CLUSTER_FILENAME
     isVerbose = verbose
     corpus = corpus_input
@@ -53,6 +60,8 @@ def prepare_cluster(corpus_input: DataFrame, corpus_raw: DataFrame, path, write_
     Cluster_X_Tfidf = Tfidf_vect.transform(corpus['text_final'])
     if new_data is not None:
         unlabeled = Tfidf_vect.transform([new_data])
+    elif cluster_label:
+        unlabeled = Cluster_X_Tfidf
     else:
         unlabeled = Tfidf_vect.transform(
             [
@@ -147,25 +156,47 @@ def cluster():
         cluster_model = None
     if cluster_model is None:
         cluster_model = KMeans(
-            n_clusters=5, init='random',
+            n_clusters=20, init='random',
             n_init=10, max_iter=300,
             tol=1e-04, random_state=0
         )
     if fitTrainModel:
+        cat_num = cluster_model.n_clusters
         X = Cluster_X_Tfidf
         y_km = cluster_model.fit_predict(X)
-        vprint(y_km)
-        for idx,val in enumerate(y_km):
-            print("Title: {} | Value: {}".format(corpusRaw['title'][idx],val))
+        clustering_label = generate_label(cat_num,y_km)
+        for i in range(cat_num):
+            cnt = sum(x == i for x in y_km)
+            vprint("Cluster {} | Members: {} | Value {}".format(i,cnt,clustering_label[i]))
+        # for idx,val in enumerate(y_km):
+        #     vprint("Title: {} | Value: {}".format(corpusRaw['headline'][idx],clustering_label[val]))
         joblib.dump(cluster_model, CLUSTER_FILENAME, compress=9)
-    c = cluster_model.predict(unlabeled)
-    # cluster_model.partial_fit(unlabeled, c)
-    # joblib.dump(cluster_model, MLP_FILENAME, compress=9)
-    return c[0]
+        return y_km
+    else:
+        c = cluster_model.predict(unlabeled)
+        return c
 
+def generate_label(n_clusters,cluster_result):
+    cat = n_clusters*[None]
+    for i in range(n_clusters):
+        d = [idx for idx,val in enumerate(cluster_result) if val == i]
+        counter = Counter()
+        sl = corpus.iloc[d,:]['text_final']
+        tfidf = Tfidf_vect.transform(sl)
+        feature_names = Tfidf_vect.get_feature_names()
+        for doc in range(len(d)):
+            dic = {}
+            feature_index = tfidf[doc, :].nonzero()[1]
+            tfidf_scores = zip(feature_index, [tfidf[doc, x] for x in feature_index])
+            for w, s in [(feature_names[i], s) for (i, s) in tfidf_scores]:
+                dic[w] = s
+            c = Counter(dic)
+            counter += c
+        cat[i] = [(x,y/len(d)) for (x,y) in counter.most_common(3)]
+    return cat
 
-
-def prepare(corpus_input: DataFrame, path, write_corpus=True, fit_corpus=True, fit_train_model=True, proba=False, partial=True, verbose=False, new_data = None):
+def prepare(corpus_input: DataFrame, path, write_corpus=True, fit_corpus=True, fit_train_model=True,
+            proba=False, partial=True, verbose=False, new_data = None):
     global Train_X, Test_X, Train_Y, Test_Y, Train_Y_Encoded, Test_Y_Encoded, Train_X_Tfidf, Test_X_Tfidf, unlabeled, \
         fitTrainModel, probaPredict, isVerbose, CORPUS_VECTOR, MNB_FILENAME, MLP_FILENAME, SVM_FILENAME, corpus, partialTrain
     corpus = corpus_input
