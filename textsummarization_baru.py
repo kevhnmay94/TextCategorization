@@ -208,6 +208,9 @@ def summarize_text(input_text:str, max_length_ratio=0.0, max_length_character=0,
 def translate(input:str):
     translated = translation.google(input,from_language='en',to_language='id')
     return translated
+def detect_language(input:str):
+    detection = translator.detect(input)
+    return detection
     # translate_summary = translator.translate(input,src='en', dest='id')
     # return translate_summary.text
 
