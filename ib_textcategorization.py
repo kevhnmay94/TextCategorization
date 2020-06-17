@@ -244,9 +244,9 @@ def updatePostStory(post_id):
     exists = False
     story_score = {}
     story_map = {}
-    for story in storylist:
-        story_id = story['STORY_ID'][0]
-        posts = story['POST_ID'].split(",")
+    for i in range(len(storylist)):
+        story_id = storylist.iloc[i,:]['STORY_ID']
+        posts = storylist.iloc[i,:]['POST_ID'].split(",")
         story_map[story_id] = posts
         exists = post_id in posts
         if not exists:
@@ -261,9 +261,12 @@ def updatePostStory(post_id):
         else:
             break
     if not exists:
-        eval_score = {key: sum(value.values()) / len(story_score.keys()) for key, value in story_score}
+        vprint("Story score:")
+        vprint(story_score)
+        vprint("Post id: {}".format(post_id))
+        eval_score = {key: (sum(value.values()) / len(current_categories)) for key, value in story_score.items()}
         try:
-            for story_id,value in eval_score:
+            for story_id,value in eval_score.items():
                 if value >= 0.5:
                     story_map[story_id].append(post_id)
                     post_ids = ",".join(story_map[story_id])
