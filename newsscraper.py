@@ -468,70 +468,11 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
             not_news = x.find("a", {"class": "lrv-a-unstyle-link lrv-u-display-block"})
             time = x.find("time", {"class": "c-timestamp"})
             if not_news is None and time is not None:
-                month = ""
-                date = ""
-                year = ""
-                hour = ""
-                minute = ""
-                meridian = ""
                 time_date = str(time.text)
-                if "ago" not in time_date:
-                    monthday = time_date.split(",")
-                    month_day = monthday[0].split(" ")
-                    a = 0
-                    b = 0
-                    for i in month_day:
-                        if a == 0:
-                            month = str(i)
-                        else:
-                            date = str(i)
-                        a = a + 1
-                    yhmm = monthday[1].split(" ")
-                    year = yhmm[1]
-                    hm = yhmm[2]
-                    meridian = yhmm[3]
-                    hourmin = hm.split(":")
-                    for j in hourmin:
-                        if b == 0:
-                            hour = j
-                        else:
-                            minute = j
-                        b = b + 1
-
-                    if meridian.casefold() == "pm".casefold():
-                        hour_int = int(hour)
-                        hour_int = hour_int + 12
-                        if hour_int == 24:
-                            hour_int = 0
-                        hour = str(hour_int)
-
-                    if month.casefold() == "JAN".casefold():
-                        month = "1"
-                    elif month.casefold() == "FEB".casefold():
-                        month = "2"
-                    elif month.casefold() == "MAR".casefold():
-                        month = "3"
-                    elif month.casefold() == "APR".casefold():
-                        month = "4"
-                    elif month.casefold() == "MAY".casefold():
-                        month = "5"
-                    elif month.casefold() == "JUN".casefold():
-                        month = "6"
-                    elif month.casefold() == "JUL".casefold():
-                        month = "7"
-                    elif month.casefold() == "AUG".casefold():
-                        month = "8"
-                    elif month.casefold() == "SEP".casefold():
-                        month = "9"
-                    elif month.casefold() == "OCT".casefold():
-                        month = "10"
-                    elif month.casefold() == "NOV".casefold():
-                        month = "11"
-                    elif month.casefold() == "DEC".casefold():
-                        month = "12"
-
-                    dt = datetime(year=int(year), month=int(month), day=int(date), hour=int(hour), minute=int(minute))
-                    dt_millis = dt.timestamp() * 1000
+                if time_date is not None:
+                    date_time = dateparser.parse(time_date)
+                    dt_millis = date_time.timestamp() * 1000
+                    print(dt_millis)
                     dt_now = datetime.now().timestamp() * 1000
                     if dt_now - dt_millis <= 86400000:
                         news_list.append(article_link)
@@ -558,6 +499,47 @@ def fetch_news_list(domain: str, category: str, date_latest: datetime, date_earl
             elif datetime.timestamp(date) <= datetime.timestamp(dt_l):
                 if link not in news_list:
                     news_list.append(link)
+            pass
+        pass
+    elif domain == "reuters.com":
+        url = "https://www.reuters.com/finance"
+        req = Request(url, headers=hdr)
+        html = urlopen(req, timeout=30)
+        soup = BeautifulSoup(html, features="lxml")
+        article_block = soup.findAll("a")
+        time_block = soup.findAll("time",{"class":"article-time"})
+        n = 0
+        for x in article_block:
+            title = x.find("h3", {"class": "story-title"})
+            link = x.get("href")
+            if title is not None and link is not None:
+                time = time_block[n].find("span", {"class": "timestamp"}).string
+                n = n + 1
+                time_news = dateparser.parse(time) - timedelta(days=1)
+                time_stamp = time_news.timestamp() * 1000
+                time_now = datetime.now().timestamp() * 1000
+                if time_now - (time_stamp + 39600000) <= 86400000:
+                    link = "https://reuters.com{}".format(link.strip())
+                    news_list.append(link)
+            pass
+        pass
+    elif domain == "marketwatch.com":
+        url = "https://www.marketwatch.com/markets?mod=top_nav"
+        req = Request(url, headers=hdr)
+        html = urlopen(req, timeout=30)
+        soup = BeautifulSoup(html, features="lxml")
+        article_block = soup.findAll("h3", {"class": "article__headline"})
+        article_detail = soup.findAll("div", {"class": "article__details"})
+        for x, z in zip(article_block, article_detail):
+            title = x.find("a").text.strip()
+            link = x.find("a").get("href")
+            date = z.find("span", {"class": "article__timestamp"}).text.strip()
+            datereal = dateparser.parse(date)
+            datemillis = datetime.timestamp(datereal)
+            datemillis = datemillis * 1000
+            datenow = datetime.now().timestamp() * 1000
+            if datenow - (datemillis + 43200000) <= 86400000:
+                news_list.append(link)
             pass
         pass
     # elif domain == "theblockcrypto.com":

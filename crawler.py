@@ -109,6 +109,7 @@ def download_article(url):
     article.parse()
     image_arr = []
     size = len(article.images)
+    article_text = ""
     # if size > 1:
     #     for image in article.images:
     #         # print("images : {}".format(image))
@@ -118,38 +119,38 @@ def download_article(url):
     #             img_size = getsize(image)
     #             image_arr.append({'url':image,'size':int(img_size)})
     # image_arr = sorted(image_arr, key=lambda k: k['size'])
-    # print("size image : {}".format(len(image_arr)))
+    # # print("size image : {}".format(len(image_arr)))
     # valMean = 0
     # for x in image_arr:
     #     if x['url'] == article.top_image:
     #         valMean = x['size']
-    #         print("top image : {}".format(article.top_image))
-    #         print("url : {}".format(x['url']))
-    # print("mean : {}".format(valMean))
-    # print("image arr : {}".format(image_arr))
+    # #         print("top image : {}".format(article.top_image))
+    # #         print("url : {}".format(x['url']))
+    # # print("mean : {}".format(valMean))
+    # # print("image arr : {}".format(image_arr))
     # closestOne = findClosest(image_arr,len(image_arr),valMean)
-    # print("closest one : {}".format(closestOne))
+    # # print("closest one : {}".format(closestOne))
     # closestOneURL = ""
     # valIndex = 0
     # for x in image_arr:
-        # print("x : {}".format(x))
-        # print(x['url'])
-        # print(x['size'])
-        # print(type(x['url']))
-        # print(type(x['size']))
-        # print(type(closestOne))
-        # if int(x['size']) == int(closestOne):
-        #     closestOneURL = x['url']
-        #     valIndex = image_arr.index(x)
-    # print("index : {} {}".format(valIndex,closestOneURL))
-
+    #     # print("x : {}".format(x))
+    #     # print(x['url'])
+    #     # print(x['size'])
+    #     # print(type(x['url']))
+    #     # print(type(x['size']))
+    #     # print(type(closestOne))
+    #     if int(x['size']) == int(closestOne):
+    #         closestOneURL = x['url']
+    #         valIndex = image_arr.index(x)
+    # # print("index : {} {}".format(valIndex,closestOneURL))
+    #
     # image_temp = []
     # for a in image_arr:
     #     if a['url'] != closestOneURL:
     #         # print("A : {}".format(a))
     #         image_temp.append(a)
-
-
+    #
+    #
     # closestTwoURL = ""
     # if len(image_arr) > 2:
     #     closestTwo = findClosest(image_temp,len(image_temp),valMean)
@@ -157,7 +158,7 @@ def download_article(url):
     #         if x['size'] == closestTwo and x['url'] != closestOneURL:
     #             closestTwoURL = x['url']
     #             # print("closest two : {} {}".format(closestTwo, closestTwoURL))
-
+    #
     image_choice = []
     # if size > 2:
     #     image_choice.append(article.top_image)
@@ -167,9 +168,11 @@ def download_article(url):
     #     image_choice.append(article.top_image)
     #     image_choice.append(closestOneURL)
     # else:
-    image_choice.append(article.top_image)
+    #     image_choice.append(article.top_image)
+    if article.text is not None and len(article.text) > 0:
+        article_text = article.text
 
-    return article.text, article.title, image_choice
+    return article_text, article.title, image_choice
 
 
 hdr = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
@@ -393,6 +396,16 @@ def crawl_article(crawl_url: str):
         except (Exception,HTTPError):
             text_block_1, title_1, image_link_1 = download_article(crawl_url)
     elif domain.endswith('artnews.com'):
+        try:
+            text_block_1, title_1, image_link_1 = download_article(crawl_url)
+        except (Exception,HTTPError):
+            text_block_1, title_1, image_link_1 = download_article(crawl_url)
+    elif domain.endswith('reuters.com'):
+        try:
+            text_block_1, title_1, image_link_1 = download_article(crawl_url)
+        except (Exception,HTTPError):
+            text_block_1, title_1, image_link_1 = download_article(crawl_url)
+    elif domain.endswith('marketwatch.com'):
         try:
             text_block_1, title_1, image_link_1 = download_article(crawl_url)
         except (Exception,HTTPError):
