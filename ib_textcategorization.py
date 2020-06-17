@@ -1,4 +1,6 @@
 #! /usr/local/bin/python3.7
+from collections import Counter
+
 import pandas as pd
 import numpy as np
 import scikitprocessing
@@ -199,10 +201,9 @@ def checkCategory(category):
             category_id = cursor.fetchone()[0]
             # category_id = int(result)
             return category_id
-
-        connection.commit()
     finally:
         connection.close()
+
 def deleteOthers(postID):
 
     with open("database.txt") as f:
@@ -223,9 +224,59 @@ def deleteOthers(postID):
         connection.close()
 
 
+def updatePostStory(post_id):
+    with open("database.txt") as f:
+        props = [line.rstrip() for line in f]
 
+    # Connect to the database
+    connection = pymysql.connect(host=props[0],
+                                 user=props[1],
+                                 password=props[2],
+                                 db=props[3])
 
-
+    query = "SELECT `F_PIN` FROM `POST` WHERE `POST_ID` = '{}'".format(post_id)
+    fpin = pd.read_sql(query,connection)['F_PIN'][0]
+    query2 = "SELECT * FROM `POST_STORY` WHERE `F_PIN` = '{}'".format(fpin)
+    storylist = pd.read_sql(query2,connection)
+    query3 = "SELECT `CATEGORY` FROM `CONTENT_CATEGORY` WHERE `POST_ID` = '{}'".format(post_id)
+    current_categories = pd.read_sql(query3,connection)['CATEGORY'].to_list()
+    # check if post exists in story
+    exists = False
+    story_score = {}
+    story_map = {}
+    for story in storylist:
+        story_id = story['STORY_ID'][0]
+        posts = story['POST_ID'].split(",")
+        story_map[story_id] = posts
+        exists = post_id in posts
+        if not exists:
+            posts_length = len(posts)
+            c = Counter({x : 0 for x in current_categories})
+            for post in posts:
+                query = "SELECT `CATEGORY` FROM `CONTENT_CATEGORY` WHERE `POST_ID` = '{}'".format(post)
+                categories = pd.read_sql(query,connection)['CATEGORY'].to_list()
+                c += Counter(categories)
+            d = {key: c[key]/posts_length for key in dict(c).keys() & set(current_categories)}
+            story_score[story_id] = d
+        else:
+            break
+    if not exists:
+        eval_score = {key: sum(value.values()) / len(story_score.keys()) for key, value in story_score}
+        try:
+            for story_id,value in eval_score:
+                if value >= 0.5:
+                    story_map[story_id].append(post_id)
+                    post_ids = ",".join(story_map[story_id])
+                    with connection.cursor() as cursor:
+                        sql = "UPDATE `POST_STORY` SET `POST_ID` = %s WHERE `STORY_ID` = %s"
+                        cursor.execute(sql, (post_ids, story_id))
+                    pass
+                pass
+            connection.commit()
+        finally:
+            connection.close()
+    else:
+        pass
 
 def fetch_unlabeled_SQL():
     with open("database.txt") as f:
@@ -367,6 +418,7 @@ if useScikit:
                         isNews = True
                 if isNews == False:
                     deleteOthers(b)
+                updatePostStory(b)
         else:
             print(result[0])
             print(result[2])
@@ -378,8 +430,6 @@ if useScikit:
     totalend = time.time()
     totalelapse = totalend - totalstart
     vprint("Total python time: {}".format(totalelapse))
-
-
 
 # if useKeras:
 #     kerasprocessing.exec(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus, fit_train_model=fitTrainModel,
