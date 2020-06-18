@@ -8,6 +8,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neural_network import multilayer_perceptron
 from sklearn.preprocessing import LabelEncoder
 from collections import Counter
+from sklearn.metrics import silhouette_score
 import ast
 from nltk.corpus import stopwords,verbnet
 
@@ -32,17 +33,24 @@ corpus = None
 partialTrain = True
 corpusRaw = None
 Tfidf_vect = None
+modelToFile = True
+nClusters = 20
+top3Clusters = False
 
 clustering_label = []
 
 def prepare_cluster(corpus_input: DataFrame, corpus_raw: DataFrame, path, write_corpus=True,
-                    fit_train_model=True, fit_corpus=True, verbose=False, new_data=None, cluster_label=False):
-    global isVerbose, corpus, CLUSTER_FILENAME, probaPredict, Cluster_X_Tfidf, unlabeled, fitTrainModel, corpusRaw, Tfidf_vect
+                    fit_train_model=True, fit_corpus=True, verbose=False, new_data=None, cluster_label=True,
+                    model_to_file=True, n_clusters=20, top_3_clusters=False):
+    global isVerbose, corpus, CLUSTER_FILENAME, probaPredict, Cluster_X_Tfidf, unlabeled, fitTrainModel, corpusRaw, Tfidf_vect, modelToFile, nClusters, top3Clusters
     CLUSTER_FILENAME = path + CLUSTER_FILENAME
     isVerbose = verbose
     corpus = corpus_input
     fitTrainModel = fit_train_model
     corpusRaw = corpus_raw
+    modelToFile = model_to_file
+    nClusters = n_clusters
+    top3Clusters = top_3_clusters
     vprint(CORPUS_VECTOR)
     if write_corpus is True:
         Tfidf_vect = None
@@ -150,31 +158,70 @@ def prepare_cluster(corpus_input: DataFrame, corpus_raw: DataFrame, path, write_
              ])
 
 def cluster():
-    try:
-        cluster_model = joblib.load(CLUSTER_FILENAME)
-    except FileNotFoundError:
-        cluster_model = None
+    global modelToFile
+    if type(nClusters) is list:
+        modelToFile = False
+        for n in nClusters:
+            cluster_predict(n,False)
+        return None
+    elif type(nClusters) is int:
+        c = cluster_predict(nClusters,isVerbose)
+        return c
+
+def cluster_predict(n_classes,print_detail):
+    global fitTrainModel
+    cluster_model = None
+    if modelToFile:
+        try:
+            cluster_model = joblib.load(CLUSTER_FILENAME)
+        except FileNotFoundError:
+            pass
     if cluster_model is None:
         cluster_model = KMeans(
-            n_clusters=20, init='random',
+            n_clusters=n_classes, init='random',
             n_init=10, max_iter=300,
             tol=1e-04, random_state=0
         )
+        fitTrainModel = True
     if fitTrainModel:
         cat_num = cluster_model.n_clusters
         X = Cluster_X_Tfidf
-        y_km = cluster_model.fit_predict(X)
-        clustering_label = generate_label(cat_num,y_km)
-        for i in range(cat_num):
-            cnt = sum(x == i for x in y_km)
-            vprint("Cluster {} | Members: {} | Value {}".format(i,cnt,clustering_label[i]))
-        # for idx,val in enumerate(y_km):
-        #     vprint("Title: {} | Value: {}".format(corpusRaw['headline'][idx],clustering_label[val]))
-        joblib.dump(cluster_model, CLUSTER_FILENAME, compress=9)
+        if top3Clusters:
+            y_km = cluster_model.fit_transform(X)
+            cntr = Counter()
+            rankd = []
+            for c in y_km:
+                arr = np.array(c)
+                sortd = arr.argsort()[:3].tolist()
+                rankd.append(sortd)
+                if isVerbose:
+                    cntr += Counter(sortd)
+            if isVerbose:
+                for r in rankd:
+                    vprint(r)
+                vprint(cntr)
+            y_km = rankd
+        else:
+            y_km = cluster_model.fit_predict(X)
+            if isVerbose:
+                labels = cluster_model.labels_
+                cluster_members = cat_num*[None]
+                clustering_label = generate_label(cat_num,y_km)
+                for i in range(cat_num):
+                    cnt = sum(x == i for x in y_km)
+                    if print_detail:
+                        vprint("Cluster {} | Members: {} | Value {}".format(i,cnt,clustering_label[i]))
+                    cluster_members[i] = cnt
+                vprint("Clusters: {} | Standard deviation: {} | Silhouette score: {}".format(cat_num,np.std(cluster_members),silhouette_score(X,labels)))
+                vprint(y_km)
+        if modelToFile:
+            joblib.dump(cluster_model, CLUSTER_FILENAME, compress=9)
         return y_km
     else:
-        c = cluster_model.predict(unlabeled)
-        return c
+        c = cluster_model.transform(unlabeled)
+        arr = np.array(c[0])
+        sortd = arr.argsort()[:3]
+        return sortd.tolist()
 
 def generate_label(n_clusters,cluster_result):
     cat = n_clusters*[None]
