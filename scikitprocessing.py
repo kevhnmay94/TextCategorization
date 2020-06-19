@@ -257,12 +257,12 @@ def prepare(corpus_input: DataFrame, path, write_corpus=True, fit_corpus=True, f
     partialTrain = partial
     vprint('Preparing train and test data sets...')
     test_size = 0.25 if fitTrainModel else corpus['text_final'].size - 1
-    # Train_X, Test_X, Train_Y, Test_Y = model_selection.train_test_split(corpus['text_final'], corpus['category'],
-    Train_X, Test_X, Train_Y, Test_Y = model_selection.train_test_split(corpus['text_final'], corpus['story_id'],
+    Train_X, Test_X, Train_Y, Test_Y = model_selection.train_test_split(corpus['text_final'], corpus['category'],
+    # Train_X, Test_X, Train_Y, Test_Y = model_selection.train_test_split(corpus['text_final'], corpus['story_id'],
                                                                         test_size=test_size)
     vprint('Encoding labels...')
 
-    Encoder.fit_transform(corpus['story_id'])
+    Encoder.fit_transform(corpus['category'])
     vprint(CORPUS_VECTOR)
     if write_corpus is True:
         Tfidf_vect = None
@@ -280,7 +280,7 @@ def prepare(corpus_input: DataFrame, path, write_corpus=True, fit_corpus=True, f
     Train_X_Tfidf = Tfidf_vect.transform(Train_X)
     Test_X_Tfidf = Tfidf_vect.transform(Test_X)
     if new_data is not None:
-        unlabeled = Tfidf_vect.transform([new_data])
+        unlabeled = Tfidf_vect.transform(new_data)
     else:
         unlabeled = Tfidf_vect.transform(
             [

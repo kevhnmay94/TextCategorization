@@ -41,7 +41,7 @@ def news_bot_story():
                 str_pid = ",".join(post_ids)
                 with connection.cursor() as cursor:
                     # Read a single record
-                    sql3 = "UPDATE `POST_STORY` SET `POST_ID` =  %s and `STORY_DATE` = %s where `STORY_NAME` = %s and `F_PIN` = %s"
+                    sql3 = "UPDATE `POST_STORY` SET `POST_ID` =  %s,`STORY_DATE` = %s where `STORY_NAME` = %s and `F_PIN` = %s"
                     tn = round(datetime.datetime.now().timestamp() * 1000)
                     cursor.execute(sql3, (str_pid, tn, val2, fpin))
         sql4 = "SELECT `ID`,`CODE` FROM `CATEGORY` WHERE `CODE` NOT IN (SELECT `STORY_NAME` FROM `POST_STORY` WHERE `F_PIN` = '{}')".format(fpin)
@@ -60,8 +60,9 @@ def news_bot_story():
             if post_ids:
                 str_pid = ",".join(post_ids)
                 with connection.cursor() as cursor:
-                    sql7 = "UPDATE `POST_STORY` SET `POST_ID` = %s WHERE `STORY_NAME` = %s"
-                    cursor.execute(sql7,(str_pid,val1))
+                    sql7 = "UPDATE `POST_STORY` SET `POST_ID` =  %s,`STORY_DATE` = %s where `STORY_NAME` = %s and `F_PIN` = %s"
+                    tn = round(datetime.datetime.now().timestamp() * 1000)
+                    cursor.execute(sql7, (str_pid, tn, val1, fpin))
         connection.commit()
     finally:
         connection.close()

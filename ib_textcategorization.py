@@ -173,6 +173,7 @@ def insertCategory(post_id,category):
             # Read a single record
             sql = "SELECT `ID` FROM `CATEGORY` where `CODE` = %s"
             cursor.execute(sql, (str(category),))
+            vprint("Category id: ", cursor.fetchone())
             category_id = cursor.fetchone()[0]
             # category_id = int(result)
 
@@ -407,7 +408,7 @@ if useScikit:
 
     if probaResult:
         if headline is not None and content is not None:
-            print(result[0][0])
+            print(result[0])
             print(result[2])
             dataset = pd.DataFrame(data={'category': result[1], 'headline': [headline], 'content': [content]})
             dataset.to_csv(path + 'dataset-all.csv',mode='a',header=False,index=False)
@@ -415,7 +416,8 @@ if useScikit:
             for x,y,z in zip(result[1],unc['title'].tolist(),unc['description'].tolist()):
                 dataset = pd.DataFrame(data={'category': x, 'headline': y, 'content': z}, index=[0])
                 dataset.to_csv(path + 'dataset-all.csv', mode='a', header=False, index=False)
-            for a,b in zip(result[0],unc['post_id'].tolist()):
+            for a,b in zip(result,unc['post_id'].tolist()):
+                vprint(a,b)
                 isNews = False
                 for category in a:
                     insertCategory(b,category)
