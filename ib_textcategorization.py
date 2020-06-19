@@ -36,7 +36,7 @@ headline = None
 content = None
 probaResult = True
 partialTrain = False
-useSQL = False
+useSQL = True
 
 def vprint(*data):
     if verbose:
@@ -295,7 +295,7 @@ def fetch_unlabeled_SQL():
                                  password=props[2],
                                  db=props[3])
 
-    query = "SELECT * FROM CATEGORY where CODE = 'News'"
+    query = "SELECT * FROM CATEGORY where CODE = 'Berita'"
     vprint('db others')
     others = pd.read_sql(query, connection)['ID'][0]
     vprint('db others 2')
