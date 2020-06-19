@@ -5,7 +5,7 @@ from sklearn import metrics
 from sklearn import model_selection, naive_bayes as nb_generator, svm as svm_generator
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.neural_network import multilayer_perceptron
+from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import LabelEncoder
 from collections import Counter
 from sklearn.metrics import silhouette_score
@@ -447,7 +447,7 @@ def test_mlp():
     except FileNotFoundError:
         mlp_model = None
     if mlp_model is None:
-        mlp_model = multilayer_perceptron.MLPClassifier()
+        mlp_model = MLPClassifier()
         fitTrainModel = True
         partialTrain = False
     mlp_model.set_params(max_iter=400, solver='adam', hidden_layer_sizes=(500,))
@@ -465,6 +465,10 @@ def test_mlp():
         vprint("Recall -> ", f'{recall3:.2f}%')
         vprint("Precision -> ", f'{precision3:.2f}%')
     if probaPredict:
+        labels = Encoder.classes_
+        if isVerbose:
+            for idx,val in enumerate(labels):
+                vprint("{}. {}".format(idx,val))
         c = mlp_model.predict_proba(unlabeled)
         vprint(c)
         arr = np.array(c[0])

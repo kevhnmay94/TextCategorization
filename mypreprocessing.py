@@ -13,7 +13,6 @@ fixContractions = False
 isVerbose = False
 np.random.seed()
 
-
 def write_corpus(path, fix_contractions=False, verbose=False):
     global isVerbose
     isVerbose = verbose
@@ -21,7 +20,7 @@ def write_corpus(path, fix_contractions=False, verbose=False):
     nltk.download('wordnet')
     nltk.download('averaged_perceptron_tagger')
     nltk.download('stopwords')
-    corpus = pd.read_csv(path + "dataset-all.csv")
+    corpus = pd.read_csv(path + "dataset-ib.csv")
     corpus['text'] = corpus['headline'] + " " + corpus["content"]
     corpus['text'].dropna(inplace=True)
     corpus['text'] = [entry.lower() for entry in corpus['text']]
@@ -40,14 +39,14 @@ def write_corpus(path, fix_contractions=False, verbose=False):
         # pos_tag function below will provide the 'tag' i.e if the word is Noun(N) or Verb(V) or something else.
         for word, tag in pos_tag(entry):
             # Below condition is to check for Stop words and consider only alphabets
-            if word not in stopwords.words('english') and word.isalpha():
+            if word not in stopwords.words('english') and word not in stopwords.words('indonesian') and word.isalpha():
                 word_Final = word_Lemmatized.lemmatize(word, tag_map[tag[0]])
                 Final_words.append(word_Final)
         # The final processed set of words for each iteration will be stored in 'text_final'
         corpus.loc[index, 'text_final'] = str(Final_words)
 
     corpus = corpus.loc[:, ['category', 'text_final']]
-    corpus.to_csv(path + 'dataset_final.csv')
+    corpus.to_csv(path + 'dataset_final_ib.csv')
     return corpus
 
 

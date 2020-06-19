@@ -22,9 +22,9 @@ SVM_FILENAME = path + 'svm_classifier.pkl'
 MLP_FILENAME = path + 'mlp_classifier.pkl'
 CORPUS_VECTOR = path + 'tfidf_vector.pkl'
 trainMode = False
-fitCorpus = False
-fitTrainModel = False
-writeCorpus = False
+fitCorpus = True
+fitTrainModel = True
+writeCorpus = True
 useScikit = True
 useScikitMNB = False
 useScikitSVM = False
@@ -35,8 +35,8 @@ verbose = False
 headline = None
 content = None
 probaResult = True
-partialTrain = True
-useSQL = True
+partialTrain = False
+useSQL = False
 
 def vprint(*data):
     if verbose:
@@ -355,7 +355,7 @@ if writeCorpus:
     corpus = None
 else:
     try:
-        corpus = pd.read_csv(path + "dataset_final.csv")
+        corpus = pd.read_csv(path + "dataset_final_ib.csv")
     except FileNotFoundError:
         corpus = None
 if corpus is None or writeCorpus:
@@ -372,6 +372,7 @@ if useScikit:
     vprint("Content: ",content)
     if headline is not None and content is not None:
         test_str = headline + " " + content
+        test_str = [test_str]
     elif useSQL:
         test_str,unc = fetch_unlabeled_SQL()
         if not test_str:
@@ -379,7 +380,7 @@ if useScikit:
     vprint("Test: ",test_str)
     start = time.time()
     if useCluster:
-        corpus_raw = pd.read_csv(path + "dataset-all.csv")
+        corpus_raw = pd.read_csv(path + "dataset-ib.csv")
         probaResult = False
         scikitprocessing.prepare_cluster(corpus_input=corpus,corpus_raw=corpus_raw,path=path,write_corpus=writeCorpus,
                                          fit_train_model=fitTrainModel,fit_corpus=fitCorpus,verbose=verbose,
@@ -409,13 +410,13 @@ if useScikit:
     if probaResult:
         if headline is not None and content is not None:
             print(result[0])
-            print(result[2])
+            print(result[1])
             dataset = pd.DataFrame(data={'category': result[1], 'headline': [headline], 'content': [content]})
-            dataset.to_csv(path + 'dataset-all.csv',mode='a',header=False,index=False)
+            dataset.to_csv(path + 'dataset-ib.csv',mode='a',header=False,index=False)
         elif useSQL:
             for x,y,z in zip(result[1],unc['title'].tolist(),unc['description'].tolist()):
                 dataset = pd.DataFrame(data={'category': x, 'headline': y, 'content': z}, index=[0])
-                dataset.to_csv(path + 'dataset-all.csv', mode='a', header=False, index=False)
+                dataset.to_csv(path + 'dataset-ib.csv', mode='a', header=False, index=False)
             for a,b in zip(result,unc['post_id'].tolist()):
                 vprint(a,b)
                 isNews = False
@@ -429,12 +430,12 @@ if useScikit:
                 news_bot_story.news_bot_story()
         else:
             print(result[0])
-            print(result[2])
+            print(result[1])
     else:
         print(result)
         if headline is not None and content is not None:
             dataset = pd.DataFrame(data={'category': [result], 'headline': [headline], 'content': [content]})
-            dataset.to_csv(path + 'dataset-all.csv',mode='a',header=False,index=False)
+            dataset.to_csv(path + 'dataset-ib.csv',mode='a',header=False,index=False)
     totalend = time.time()
     totalelapse = totalend - totalstart
     vprint("Total python time: {}".format(totalelapse))
