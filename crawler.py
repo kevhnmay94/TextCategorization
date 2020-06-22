@@ -179,6 +179,9 @@ def download_article(url):
     for og in tag:
         if og.get("property",None) == "og:image":
             image_url = og.get("content",None)
+    if len(image_url) == 0:
+        image_url = article.top_image
+
     if len(image_url) > 0:
         image_choice.append(image_url)
 
@@ -474,6 +477,7 @@ def main():
         n = 0
         # print("Type : {}".format(type(image_src)))
         if type(image_src) == str:
+            isUnicode = False
             if alias:
                 img_filename = alias + os.path.splitext(os.path.basename(image_src.split("?")[0]))[-1]
             else:
@@ -483,10 +487,16 @@ def main():
             img_filename = re.sub(r"\s+", "_", img_filename)
             full_filename = os.path.join(basePathImg, img_filename)
             full_filename = full_filename.replace("?", "").replace("<", "").replace(">", "")
+            for x in image_src:
+                if ord(x) > 127:
+                    isUnicode = True
+            if isUnicode:
+                image_src = urllib.parse.quote(image_src, safe=":/")
             urlretrieve(image_src, full_filename)
             image_total = img_filename
         elif type(image_src) == list:
             for image in image_src:
+                isUnicode = False
                 # print("image : {}".format(image))
                 if alias:
                     img_filename = alias + os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
@@ -496,6 +506,11 @@ def main():
                 img_filename = re.sub(r"\s+", "_", img_filename)
                 full_filename = os.path.join(basePathImg, img_filename)
                 full_filename = full_filename.replace("?","").replace("<","").replace(">","")
+                for x in image:
+                    if ord(x) > 127:
+                        isUnicode = True
+                if isUnicode:
+                    image = urllib.parse.quote(image,safe=":/")
                 urlretrieve(image, full_filename)
                 image_total = image_total + img_filename + "|"
                 n = n + 1

@@ -46,17 +46,29 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
             n = 0
             if type(image_src) == list:
                 for image in image_src:
+                    isUnicode = False
                     img_filename = "APST-" + f_pin + "-" + format(curtime_milli, 'X') + "-" + str(n) + "-" + str(unique_id) + \
                                    os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
                     full_filename = os.path.join(base_path_img, img_filename)
+                    for x in image:
+                        if ord(x) > 127:
+                            isUnicode = True
+                    if isUnicode:
+                        image = urllib.parse.quote(image, safe=":/")
                     urlretrieve(image, full_filename)
                     # image_total = image_total + img_filename
                     n = n + 1
             elif type(image_src) == str:
+                isUnicode = False
                 img_filename = "APST-" + f_pin + "-" + format(curtime_milli, 'X') + "-" + str(n) + "-" + str(
                     unique_id) + \
                                os.path.splitext(os.path.basename(image_src.split("?")[0]))[-1]
                 full_filename = os.path.join(base_path_img, img_filename)
+                for x in image_src:
+                    if ord(x) > 127:
+                        isUnicode = True
+                if isUnicode:
+                    image_src = urllib.parse.quote(image_src, safe=":/")
                 urlretrieve(image_src, full_filename)
 
         post_id = f_pin + str(curtime_milli) + str(unique_id)
