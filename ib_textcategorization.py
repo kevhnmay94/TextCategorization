@@ -225,66 +225,6 @@ def deleteOthers(postID):
     finally:
         connection.close()
 
-
-# def updatePostStory(post_id):
-#     with open("database.txt") as f:
-#         props = [line.rstrip() for line in f]
-#
-#     # Connect to the database
-#     connection = pymysql.connect(host=props[0],
-#                                  user=props[1],
-#                                  password=props[2],
-#                                  db=props[3])
-#
-#     query = "SELECT DISTINCT `F_PIN` FROM `AUTO_POST`"
-#     fpin = pd.read_sql(query,connection)['F_PIN'][0]
-#     query2 = "SELECT * FROM `POST_STORY` WHERE `F_PIN` = '{}'".format(fpin)
-#     storylist = pd.read_sql(query2,connection)
-#     category_names = storylist['STORY_NAME']
-#
-#     query3 = "SELECT `CATEGORY` FROM `CONTENT_CATEGORY` WHERE `POST_ID` = '{}'".format(post_id)
-#     current_categories = pd.read_sql(query3,connection)['CATEGORY'].to_list()
-#     # check if post exists in story
-#     exists = False
-#     story_score = {}
-#     story_map = {}
-#     for i in range(len(storylist)):
-#         story_id = storylist.iloc[i,:]['STORY_ID']
-#         posts = storylist.iloc[i,:]['POST_ID'].split(",")
-#         story_map[story_id] = posts
-#         exists = post_id in posts
-#         if not exists:
-#             posts_length = len(posts)
-#             c = Counter({x : 0 for x in current_categories})
-#             for post in posts:
-#                 query = "SELECT `CATEGORY` FROM `CONTENT_CATEGORY` WHERE `POST_ID` = '{}'".format(post)
-#                 categories = pd.read_sql(query,connection)['CATEGORY'].to_list()
-#                 c += Counter(categories)
-#             d = {key: c[key]/posts_length for key in dict(c).keys() & set(current_categories)}
-#             story_score[story_id] = d
-#         else:
-#             break
-#     if not exists:
-#         vprint("Story score:")
-#         vprint(story_score)
-#         vprint("Post id: {}".format(post_id))
-#         eval_score = {key: (sum(value.values()) / len(current_categories)) for key, value in story_score.items()}
-#         try:
-#             for story_id,value in eval_score.items():
-#                 if value >= 0.5:
-#                     story_map[story_id].append(post_id)
-#                     post_ids = ",".join(story_map[story_id])
-#                     with connection.cursor() as cursor:
-#                         sql = "UPDATE `POST_STORY` SET `POST_ID` = %s WHERE `STORY_ID` = %s"
-#                         cursor.execute(sql, (post_ids, story_id))
-#                     pass
-#                 pass
-#             connection.commit()
-#         finally:
-#             connection.close()
-#     else:
-#         pass
-
 def fetch_unlabeled_SQL():
     with open("database.txt") as f:
         props = [line.rstrip() for line in f]
@@ -343,11 +283,6 @@ def fetch_unlabeled_SQL():
     vprint("Result: {}".format(result))
     vprint("Data: {}".format(data.to_string))
     return result,databaru
-    # except IndexError as e:
-    #     vprint(e)
-    #     return None
-    # except:
-    #     return None
 
 totalstart = time.time()
 np.random.seed()
@@ -407,39 +342,36 @@ if useScikit:
         elapse = end - start
         vprint("TEST MLP TIME: {}".format(elapse))
 
-    if probaResult:
-        if headline is not None and content is not None:
-            print(result[0])
-            print(result[1])
-            dataset = pd.DataFrame(data={'category': result[1], 'headline': [headline], 'content': [content]})
-            dataset.to_csv(path + 'dataset-ib.csv',mode='a',header=False,index=False)
-        elif useSQL:
-            for x,y,z in zip(result[1],unc['title'].tolist(),unc['description'].tolist()):
-                dataset = pd.DataFrame(data={'category': x, 'headline': y, 'content': z}, index=[0])
-                dataset.to_csv(path + 'dataset-ib.csv', mode='a', header=False, index=False)
-            for a,b in zip(result,unc['post_id'].tolist()):
-                vprint(a,b)
-                isNews = False
-                for category in a:
-                    insertCategory(b,category)
-                    cid = checkCategory(category)
-                    if int(cid) == 4:
-                        isNews = True
-                if isNews == False:
-                    deleteOthers(b)
-                news_bot_story.news_bot_story()
+    if result is not None:
+        if probaResult:
+            if headline is not None and content is not None:
+                print(result[0])
+                print(result[1])
+                dataset = pd.DataFrame(data={'category': result[1], 'headline': [headline], 'content': [content]})
+                dataset.to_csv(path + 'dataset-ib.csv',mode='a',header=False,index=False)
+            elif useSQL:
+                for x,y,z in zip(result[1],unc['title'].tolist(),unc['description'].tolist()):
+                    dataset = pd.DataFrame(data={'category': x, 'headline': y, 'content': z}, index=[0])
+                    dataset.to_csv(path + 'dataset-ib.csv', mode='a', header=False, index=False)
+                for a,b in zip(result,unc['post_id'].tolist()):
+                    vprint(a,b)
+                    isNews = False
+                    for category in a:
+                        insertCategory(b,category)
+                        cid = checkCategory(category)
+                        if int(cid) == 4:
+                            isNews = True
+                    if isNews == False:
+                        deleteOthers(b)
+                    news_bot_story.news_bot_story()
+            else:
+                print(result[0])
+                print(result[1])
         else:
-            print(result[0])
-            print(result[1])
-    else:
-        print(result)
-        if headline is not None and content is not None:
-            dataset = pd.DataFrame(data={'category': [result], 'headline': [headline], 'content': [content]})
-            dataset.to_csv(path + 'dataset-ib.csv',mode='a',header=False,index=False)
+            print(result)
+            if headline is not None and content is not None:
+                dataset = pd.DataFrame(data={'category': [result], 'headline': [headline], 'content': [content]})
+                dataset.to_csv(path + 'dataset-ib.csv',mode='a',header=False,index=False)
     totalend = time.time()
     totalelapse = totalend - totalstart
     vprint("Total python time: {}".format(totalelapse))
-
-# if useKeras:
-#     kerasprocessing.exec(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus, fit_train_model=fitTrainModel,
-#                          verbose=verbose, new_data=test_str)

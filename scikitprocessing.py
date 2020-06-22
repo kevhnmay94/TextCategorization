@@ -441,11 +441,13 @@ def test_svm():
 
 def test_mlp():
     global fitTrainModel, partialTrain
+    mlp_model = None
     vprint('Classify dataset using MLP...')
-    try:
-        mlp_model = joblib.load(MLP_FILENAME)
-    except FileNotFoundError:
-        mlp_model = None
+    if not fitTrainModel:
+        try:
+            mlp_model = joblib.load(MLP_FILENAME)
+        except FileNotFoundError:
+            pass
     if mlp_model is None:
         mlp_model = MLPClassifier()
         fitTrainModel = True
@@ -464,6 +466,7 @@ def test_mlp():
         vprint("MLP Accuracy Score -> ", f'{accuracy3:.2f}%')
         vprint("Recall -> ", f'{recall3:.2f}%')
         vprint("Precision -> ", f'{precision3:.2f}%')
+        return None
     if probaPredict:
         labels = Encoder.classes_
         if isVerbose:
