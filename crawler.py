@@ -171,6 +171,16 @@ def download_article(url):
     #     image_choice.append(article.top_image)
     if article.text is not None and len(article.text) > 0:
         article_text = article.text
+    req = Request(url, headers=hdr)
+    html = urlopen(req)
+    soup = BeautifulSoup(html, features="lxml")
+    tag = soup.findAll("meta")
+    image_url = ""
+    for og in tag:
+        if og.get("property",None) == "og:image":
+            image_url = og.get("content",None)
+    if len(image_url) > 0:
+        image_choice.append(image_url)
 
     return article_text, article.title, image_choice
 
