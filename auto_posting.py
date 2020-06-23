@@ -9,6 +9,7 @@ from multiprocessing import Process, Manager
 from ssl import SSLEOFError
 from urllib.error import HTTPError
 from urllib.request import urlretrieve
+from PIL import Image
 
 import mysql.connector
 from newspaper import ArticleException
@@ -47,8 +48,13 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
             if type(image_src) == list:
                 for image in image_src:
                     isUnicode = False
+                    isWebp = False
+                    extension = os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
+                    if extension == ".webp".casefold():
+                        extension = ".jpg"
+                        isWebp = True
                     img_filename = "APST-" + f_pin + "-" + format(curtime_milli, 'X') + "-" + str(n) + "-" + str(unique_id) + \
-                                   os.path.splitext(os.path.basename(image.split("?")[0]))[-1]
+                                   extension
                     full_filename = os.path.join(base_path_img, img_filename)
                     for x in image:
                         if ord(x) > 127:
@@ -56,13 +62,21 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
                     if isUnicode:
                         image = urllib.parse.quote(image, safe=":/")
                     urlretrieve(image, full_filename)
+                    if isWebp:
+                        webImage = Image.open(full_filename).convert("RGB")
+                        webImage.save(full_filename,"jpeg")
                     # image_total = image_total + img_filename
                     n = n + 1
             elif type(image_src) == str:
                 isUnicode = False
+                isWebp = False
+                extension = os.path.splitext(os.path.basename(image_src.split("?")[0]))[-1]
+                if extension == ".webp".casefold():
+                    extension = ".jpg"
+                    isWebp = True
                 img_filename = "APST-" + f_pin + "-" + format(curtime_milli, 'X') + "-" + str(n) + "-" + str(
                     unique_id) + \
-                               os.path.splitext(os.path.basename(image_src.split("?")[0]))[-1]
+                               extension
                 full_filename = os.path.join(base_path_img, img_filename)
                 for x in image_src:
                     if ord(x) > 127:
@@ -70,6 +84,9 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
                 if isUnicode:
                     image_src = urllib.parse.quote(image_src, safe=":/")
                 urlretrieve(image_src, full_filename)
+                if isWebp:
+                    webImage = Image.open(full_filename).convert("RGB")
+                    webImage.save(full_filename,"jpeg")
 
         post_id = f_pin + str(curtime_milli) + str(unique_id)
 
