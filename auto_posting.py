@@ -11,6 +11,8 @@ from urllib.error import HTTPError
 from urllib.request import urlretrieve
 from PIL import Image
 
+import requests
+import mimetypes
 import mysql.connector
 from newspaper import ArticleException
 import ib_textcategorization
@@ -79,6 +81,14 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
                     if extension == ".webp".casefold():
                         extension = ".jpg"
                         isWebp = True
+                    if len(extension) == 0:
+                        response = requests.get(image)
+                        content_type = response.headers['content-type']
+                        new_extension = mimetypes.guess_extension(content_type)
+                        if str(new_extension).casefold() == ".jpg" or str(new_extension).casefold() == ".jpeg":
+                            extension = str(new_extension)
+                        else:
+                            extension = ".jpg"
                     img_filename = "APST-" + f_pin + "-" + format(curtime_milli, 'X') + "-" + str(n) + "-" + str(unique_id) + \
                                    extension
                     full_filename = os.path.join(base_path_img, img_filename)
@@ -100,6 +110,14 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
                 if extension == ".webp".casefold():
                     extension = ".jpg"
                     isWebp = True
+                if len(extension) == 0:
+                    response = requests.get(image_src)
+                    content_type = response.headers['content-type']
+                    new_extension = mimetypes.guess_extension(content_type)
+                    if str(new_extension).casefold() == ".jpg" or str(new_extension).casefold() == ".jpeg":
+                        extension = str(new_extension)
+                    else:
+                        extension = ".jpg"
                 img_filename = "APST-" + f_pin + "-" + format(curtime_milli, 'X') + "-" + str(n) + "-" + str(
                     unique_id) + \
                                extension
