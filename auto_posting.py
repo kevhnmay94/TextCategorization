@@ -14,6 +14,7 @@ from PIL import Image
 import mysql.connector
 from newspaper import ArticleException
 import ib_textcategorization
+import pandas as pd
 
 import crawler
 import newsscraper
@@ -30,16 +31,25 @@ mydb = mysql.connector.connect(
     database=props[3]
 )
 base_path_img = props[4]
+base_path_log = props[5]
 TIMEOUT = 3000
+timenow = "{}-{}-{}".format(datetime.now().day,datetime.now().month,datetime.now().year)
+daily_log = pd.DataFrame(columns=['category','headline','content','probabilities','top3'])
 
 
 def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, privacy_flag: int):
     try:
+        global daily_log
         text_block, title, image_src = crawler.crawl_article(url)
         data = [title + " " + text_block]
         category = ib_textcategorization.classify(data)
+
+        dataset = pd.DataFrame(data={'category': [category[1]], 'headline': [title], 'content': [text_block],
+                                     'probabilities': [category[2]],
+                                     'top3': [category[0]]})
+        daily_log = daily_log.append(dataset)
         # cat_str = ""
-        cat_str = ",".join(list(map(lambda x: x, category)))
+        # cat_str = ",".join(list(map(lambda x: x, category)))
         # y = 0
         # for cat in category:
         #     if y == 0:
@@ -105,12 +115,12 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
                     webImage.save(full_filename,"jpeg")
 
         post_id = f_pin + str(curtime_milli) + str(unique_id)
-        if cat_str:
+        if category:
             post_values = (
                 post_id, f_pin, urllib.parse.quote_plus(title), urllib.parse.quote_plus(summary), curtime_milli,
                 privacy_flag,
                 img_filename,
-                img_filename, curtime_milli, url, 1, curtime_milli,category)
+                img_filename, curtime_milli, url, 1, curtime_milli,category[0])
             post_list.append(post_values)
         print("Success in fetching " + url)
     except (HTTPError, RemoteDisconnected,ArticleException,IncompleteRead,SSLEOFError):
@@ -226,6 +236,7 @@ if(len(auto_post_result) > 0):
 for q_row in auto_post_result:
     get_post_news(q_row)
 news_bot_story.news_bot_story()
+daily_log.to_csv(base_path_log + 'dataset-ib-{}.csv'.format(timenow),mode='w',header=True,index=False)
 #     p = Process(target=get_post_news, args=(q_row,))
 #     uid = uid + 1
 #     p.start()
