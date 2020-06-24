@@ -289,21 +289,22 @@ def fetch_unlabeled_SQL():
     vprint("Data: {}".format(data.to_string))
     return result,databaru
 
+if writeCorpus:
+    corpus = None
+else:
+    try:
+        corpus = pd.read_csv(path + "dataset_final_ib.csv")
+    except FileNotFoundError:
+        corpus = None
+if corpus is None or writeCorpus:
+    writeCorpus = True
+    fitTrainModel = True
+    corpus = mypreprocessing.write_corpus(path, fix_contractions=False)
+
 if __name__ == "__main__":
     verbose = True
     totalstart = time.time()
     np.random.seed()
-    if writeCorpus:
-        corpus = None
-    else:
-        try:
-            corpus = pd.read_csv(path + "dataset_final_ib.csv")
-        except FileNotFoundError:
-            corpus = None
-    if corpus is None or writeCorpus:
-        writeCorpus = True
-        fitTrainModel = True
-        corpus = mypreprocessing.write_corpus(path, fix_contractions=False)
     if (not useScikit) and (not useKeras):
         useScikit = True
     if (not useScikitMNB) and (not useScikitSVM) and (not useScikitMLP):
