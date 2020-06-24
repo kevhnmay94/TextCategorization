@@ -230,6 +230,8 @@ def deleteOthers(postID):
     finally:
         connection.close()
 
+
+
 def fetch_unlabeled_SQL():
     with open("database.txt") as f:
         props = [line.rstrip() for line in f]
@@ -289,6 +291,8 @@ def fetch_unlabeled_SQL():
     vprint("Data: {}".format(data.to_string))
     return result,databaru
 
+
+
 if writeCorpus:
     corpus = None
 else:
@@ -300,6 +304,12 @@ if corpus is None or writeCorpus:
     writeCorpus = True
     fitTrainModel = True
     corpus = mypreprocessing.write_corpus(path, fix_contractions=False)
+
+def classify(data:list):
+    scikitprocessing.prepare(corpus,path,new_data=data)
+    model = scikitprocessing.load_model(model_name=scikitprocessing.MLP_FILENAME)
+    result = scikitprocessing.test_mlp(model)
+    return result
 
 if __name__ == "__main__":
     verbose = True

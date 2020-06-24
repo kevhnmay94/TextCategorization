@@ -13,6 +13,7 @@ from PIL import Image
 
 import mysql.connector
 from newspaper import ArticleException
+import ib_textcategorization
 
 import crawler
 import newsscraper
@@ -34,6 +35,20 @@ TIMEOUT = 3000
 def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, privacy_flag: int):
     try:
         text_block, title, image_src = crawler.crawl_article(url)
+        data = []
+        data.append(title + " " + text_block)
+        category = ib_textcategorization.classify(data)
+        cat_str = ""
+        y = 0
+        for cat in category:
+            if y == 0:
+                cat_str = "(" + cat + ","
+            elif y != 0 and y != len(category) - 1:
+                cat_str = cat_str + cat + ","
+            elif y == len(category) - 1:
+                cat_str = cat_str + cat + ")"
+            y = y + 1
+
         title = textsummarization_baru.translate(title)
         summary = textsummarization_baru.summarize_text(text_block.replace("\n", " "), 1.0, 512, 'auto')
         if summary == "[Error] Error in summarizing article." or summary == "[Cannot summarize the article]":
@@ -89,13 +104,13 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
                     webImage.save(full_filename,"jpeg")
 
         post_id = f_pin + str(curtime_milli) + str(unique_id)
-
-        post_values = (
-            post_id, f_pin, urllib.parse.quote_plus(title), urllib.parse.quote_plus(summary), curtime_milli,
-            privacy_flag,
-            img_filename,
-            img_filename, curtime_milli, url, 1, curtime_milli)
-        post_list.append(post_values)
+        if cat_str:
+            post_values = (
+                post_id, f_pin, urllib.parse.quote_plus(title), urllib.parse.quote_plus(summary), curtime_milli,
+                privacy_flag,
+                img_filename,
+                img_filename, curtime_milli, url, 1, curtime_milli,cat_str)
+            post_list.append(post_values)
         print("Success in fetching " + url)
     except (HTTPError, RemoteDisconnected,ArticleException,IncompleteRead,SSLEOFError):
         print("Error in fetching " + url + " :\n" + str(sys.exc_info()[0]))
@@ -163,9 +178,9 @@ def get_post_news(row: list):
             print("Posting links: " + str(len(post_tuple_list)))
             query = "replace into POST(POST_ID, F_PIN, TITLE, DESCRIPTION, CREATED_DATE, PRIVACY, THUMB_ID, FILE_ID, LAST_UPDATE, LINK, FILE_TYPE, SCORE) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
             for element in post_tuple_list:
-                select_cursor.executemany(
+                select_cursor.execute(
                     query,
-                    (element,))
+                (element[0],element[1],element[2],element[3],element[4],element[5],element[6],element[7],element[9],element[10],element[11],))
                 mydb.commit()
                 print("Links posted: " + str(len(post_tuple_list)))
 
@@ -180,11 +195,11 @@ def get_post_news(row: list):
             post_cat_tuples = [(post[0], category_id) for post in post_tuple_list]
             # for pid in post_id_list:
             #     post_cat_tuples.append((pid, category_id))
-            query_cat = "replace into CONTENT_CATEGORY(POST_ID,CATEGORY) values (%s,4)"
+            query_cat = "replace into CONTENT_CATEGORY(POST_ID,CATEGORY) SELECT %s,ID from CATEGORY where CODE in %s"
             for element in post_cat_tuples:
                 select_cursor.execute(
                     query_cat,
-                    (element[0],))
+                    (element[0],element[12]))
                 mydb.commit()
 
             if len(post_tuple_list) > 0:
