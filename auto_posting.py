@@ -36,8 +36,7 @@ TIMEOUT = 3000
 def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, privacy_flag: int):
     try:
         text_block, title, image_src = crawler.crawl_article(url)
-        data = []
-        data.append(title + " " + text_block)
+        data = [title + " " + text_block]
         category = ib_textcategorization.classify(data)
         cat_str = ""
         y = 0

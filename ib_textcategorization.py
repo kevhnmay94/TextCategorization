@@ -309,7 +309,7 @@ def classify(data:list):
     scikitprocessing.prepare(corpus,path,new_data=data)
     model = scikitprocessing.load_model(model_name=scikitprocessing.MLP_FILENAME)
     result = scikitprocessing.test_mlp(model)
-    return result
+    return result[0]
 
 if __name__ == "__main__":
     verbose = True
