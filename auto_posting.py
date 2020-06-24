@@ -42,11 +42,11 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
         y = 0
         for cat in category:
             if y == 0:
-                cat_str = "(" + cat + ","
+                cat_str = "('" + cat + "',"
             elif y != 0 and y != len(category) - 1:
-                cat_str = cat_str + cat + ","
+                cat_str = cat_str +"'" + cat +"'"+ ","
             elif y == len(category) - 1:
-                cat_str = cat_str + cat + ")"
+                cat_str = cat_str + "'" + cat +"')"
             y = y + 1
 
         title = textsummarization_baru.translate(title)
