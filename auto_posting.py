@@ -38,16 +38,17 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
         text_block, title, image_src = crawler.crawl_article(url)
         data = [title + " " + text_block]
         category = ib_textcategorization.classify(data)
-        cat_str = ""
-        y = 0
-        for cat in category:
-            if y == 0:
-                cat_str = "('" + cat + "',"
-            elif y != 0 and y != len(category) - 1:
-                cat_str = cat_str +"'" + cat +"'"+ ","
-            elif y == len(category) - 1:
-                cat_str = cat_str + "'" + cat +"')"
-            y = y + 1
+        # cat_str = ""
+        cat_str = ", ".join(list(map(lambda x: x, category)))
+        # y = 0
+        # for cat in category:
+        #     if y == 0:
+        #         cat_str = "('" + cat + "',"
+        #     elif y != 0 and y != len(category) - 1:
+        #         cat_str = cat_str +"'" + cat +"'"+ ","
+        #     elif y == len(category) - 1:
+        #         cat_str = cat_str + "'" + cat +"')"
+        #     y = y + 1
 
         title = textsummarization_baru.translate(title)
         summary = textsummarization_baru.summarize_text(text_block.replace("\n", " "), 1.0, 512, 'auto')
@@ -196,7 +197,7 @@ def get_post_news(row: list):
             print(post_cat_tuples)
             # for pid in post_id_list:
             #     post_cat_tuples.append((pid, category_id))
-            query_cat = "replace into CONTENT_CATEGORY(POST_ID,CATEGORY) SELECT %s,ID from CATEGORY where CODE in %s"
+            query_cat = "replace into CONTENT_CATEGORY(POST_ID,CATEGORY) SELECT %s,ID from CATEGORY where CODE in (%s)"
             for element in post_cat_tuples:
                 print(element[0])
                 print(element[1])
