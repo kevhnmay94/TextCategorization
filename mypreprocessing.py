@@ -39,7 +39,7 @@ def write_corpus(path, fix_contractions=False, verbose=False):
         # pos_tag function below will provide the 'tag' i.e if the word is Noun(N) or Verb(V) or something else.
         for word, tag in pos_tag(entry):
             # Below condition is to check for Stop words and consider only alphabets
-            if word not in stopwords.words('english') and word not in stopwords.words('indonesian') and word.isalpha():
+            if word not in stopwords.words('english')  and word.isalpha():
                 word_Final = word_Lemmatized.lemmatize(word, tag_map[tag[0]])
                 Final_words.append(word_Final)
         # The final processed set of words for each iteration will be stored in 'text_final'
