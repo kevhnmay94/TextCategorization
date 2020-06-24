@@ -192,14 +192,14 @@ def get_post_news(row: list):
                     (element,))
                 mydb.commit()
 
-            post_cat_tuples = [(post[0], category_id) for post in post_tuple_list]
+            post_cat_tuples = [(post[0], post[12]) for post in post_tuple_list]
             # for pid in post_id_list:
             #     post_cat_tuples.append((pid, category_id))
             query_cat = "replace into CONTENT_CATEGORY(POST_ID,CATEGORY) SELECT %s,ID from CATEGORY where CODE in %s"
             for element in post_cat_tuples:
                 select_cursor.execute(
                     query_cat,
-                    (element[0],element[12]))
+                    (element[0],element[1]))
                 mydb.commit()
 
             if len(post_tuple_list) > 0:
