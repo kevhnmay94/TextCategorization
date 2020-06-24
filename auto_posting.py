@@ -39,7 +39,7 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
         data = [title + " " + text_block]
         category = ib_textcategorization.classify(data)
         # cat_str = ""
-        cat_str = ", ".join(list(map(lambda x: x, category)))
+        cat_str = ",".join(list(map(lambda x: x, category)))
         # y = 0
         # for cat in category:
         #     if y == 0:
@@ -110,7 +110,7 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
                 post_id, f_pin, urllib.parse.quote_plus(title), urllib.parse.quote_plus(summary), curtime_milli,
                 privacy_flag,
                 img_filename,
-                img_filename, curtime_milli, url, 1, curtime_milli,cat_str)
+                img_filename, curtime_milli, url, 1, curtime_milli,category)
             post_list.append(post_values)
         print("Success in fetching " + url)
     except (HTTPError, RemoteDisconnected,ArticleException,IncompleteRead,SSLEOFError):
@@ -182,7 +182,7 @@ def get_post_news(row: list):
                 select_cursor.execute(
                     query,
                 (element[0],element[1],element[2],element[3],element[4],element[5],element[6],element[7],element[8],element[9],element[10],element[11],))
-                mydb.commit()
+                # mydb.commit()
                 print("Links posted: " + str(len(post_tuple_list)))
 
             post_url_tuples = [(post[1], post[9]) for post in post_tuple_list]
@@ -191,28 +191,27 @@ def get_post_news(row: list):
                 select_cursor.executemany(
                     query_cat,
                     (element,))
-                mydb.commit()
+                # mydb.commit()
 
             post_cat_tuples = [(post[0], post[12]) for post in post_tuple_list]
             print(post_cat_tuples)
             # for pid in post_id_list:
             #     post_cat_tuples.append((pid, category_id))
-            query_cat = "replace into CONTENT_CATEGORY(POST_ID,CATEGORY) SELECT %s,ID from CATEGORY where CODE in (%s)"
+            query_cat = "replace into CONTENT_CATEGORY(POST_ID,CATEGORY) values (%s,%s)"
             for element in post_cat_tuples:
-                print(element[0])
-                print(element[1])
-                select_cursor.execute(
-                    query_cat,
-                    (element[0],element[1]))
-                mydb.commit()
+                for category in element[1]:
+                    select_cursor.execute(
+                        query_cat,
+                        (element[0],category))
+                    # mydb.commit()
 
             print(post_tuple_list)
             if len(post_tuple_list) > 0:
                 select_cursor.execute(
                     "update AUTO_POST set LAST_UPDATE = from_unixtime(" + str(last_update_ins) + ") where ID = " + str(
                         auto_post_id))
-                mydb.commit()
                 print(str(last_update_ins))
+            mydb.commit()
     pass
 
 
