@@ -18,6 +18,7 @@ import ib_textcategorization
 import crawler
 import newsscraper
 import textsummarization_baru
+import news_bot_story
 
 with open("database.txt") as f:
     props = [line.rstrip() for line in f]
@@ -221,6 +222,7 @@ if(len(auto_post_result) > 0):
 
 for q_row in auto_post_result:
     get_post_news(q_row)
+news_bot_story.news_bot_story()
 #     p = Process(target=get_post_news, args=(q_row,))
 #     uid = uid + 1
 #     p.start()
