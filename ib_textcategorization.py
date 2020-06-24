@@ -108,9 +108,9 @@ for i,s in enumerate(sys.argv[1:]):
     elif s[0] == '-':
         for arg in s[1:]:
             if 't' == arg:
-                trainMode = True
-            elif 'T' == arg:
                 trainMode = False
+            elif 'T' == arg:
+                trainMode = True
             elif 'C' == arg:
                 useScikit = True
             elif 'c' == arg:
