@@ -16,6 +16,12 @@ import pymysql.cursors
 import urllib.parse
 import news_bot_story
 
+verbose = False
+
+def vprint(*data):
+    if verbose:
+        print(*data)
+
 path = str(Path(sys.argv[0]).parent) + str(os.sep)
 MNB_FILENAME = path + 'mnb_classifier.pkl'
 SVM_FILENAME = path + 'svm_classifier.pkl'
@@ -31,16 +37,11 @@ useScikitSVM = False
 useScikitMLP = True
 useCluster = False
 useKeras = False
-verbose = False
 headline = None
 content = None
 probaResult = True
 partialTrain = False
-useSQL = True
-
-def vprint(*data):
-    if verbose:
-        print(*data)
+useSQL = False
 
 
 skipArg = False
@@ -154,10 +155,14 @@ if not trainMode:
     fitTrainModel = False
     writeCorpus = False
 
+def load_model(model_name):
+    return scikitprocessing.load_model(MLP_FILENAME)
+
 def unqoute(text):
     res = urllib.parse.unquote(text)
     res = urllib.parse.unquote_plus(res)
     return res
+
 def insertCategory(post_id,category):
     category_id = 15
     with open("database.txt") as f:
@@ -284,94 +289,106 @@ def fetch_unlabeled_SQL():
     vprint("Data: {}".format(data.to_string))
     return result,databaru
 
-totalstart = time.time()
-np.random.seed()
-if writeCorpus:
-    corpus = None
-else:
-    try:
-        corpus = pd.read_csv(path + "dataset_final_ib.csv")
-    except FileNotFoundError:
+if __name__ == "__main__":
+    verbose = True
+    totalstart = time.time()
+    np.random.seed()
+    if writeCorpus:
         corpus = None
-if corpus is None or writeCorpus:
-    writeCorpus = True
-    fitTrainModel = True
-    corpus = mypreprocessing.write_corpus(path, fix_contractions=False)
-if (not useScikit) and (not useKeras):
-    useScikit = True
-if (not useScikitMNB) and (not useScikitSVM) and (not useScikitMLP):
-    useScikitMLP = True
-if useScikit:
-    test_str = None
-    vprint("Headline: ",headline)
-    vprint("Content: ",content)
-    if headline is not None and content is not None:
-        test_str = headline + " " + content
-        test_str = [test_str]
-    elif useSQL:
-        test_str,unc = fetch_unlabeled_SQL()
-        if not test_str:
-            exit()
-    vprint("Test: ",test_str)
-    start = time.time()
-    if useCluster:
-        corpus_raw = pd.read_csv(path + "dataset-ib.csv")
-        probaResult = False
-        scikitprocessing.prepare_cluster(corpus_input=corpus,corpus_raw=corpus_raw,path=path,write_corpus=writeCorpus,
-                                         fit_train_model=fitTrainModel,fit_corpus=fitCorpus,verbose=verbose,
-                                         new_data=test_str,cluster_label=True)
     else:
-        scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
-                             fit_train_model=fitTrainModel, partial=partialTrain,
-                             proba=probaResult, verbose=verbose, new_data=test_str)
-    end = time.time()
-    elapse = end - start
-    vprint("Prepare time: {}".format(elapse))
-    if useCluster:
-        result = scikitprocessing.cluster()
-        print(result)
-        exit()
-    if useScikitMNB:
-        result = scikitprocessing.test_mnb()
-    if useScikitSVM:
-        result = scikitprocessing.test_svm()
-    if useScikitMLP:
+        try:
+            corpus = pd.read_csv(path + "dataset_final_ib.csv")
+        except FileNotFoundError:
+            corpus = None
+    if corpus is None or writeCorpus:
+        writeCorpus = True
+        fitTrainModel = True
+        corpus = mypreprocessing.write_corpus(path, fix_contractions=False)
+    if (not useScikit) and (not useKeras):
+        useScikit = True
+    if (not useScikitMNB) and (not useScikitSVM) and (not useScikitMLP):
+        useScikitMLP = True
+    if useScikit:
+        test_str = None
+        vprint("Headline: ",headline)
+        vprint("Content: ",content)
+        if headline is not None and content is not None:
+            test_str = headline + " " + content
+            test_str = [test_str]
+        elif useSQL and not trainMode:
+            test_str,unc = fetch_unlabeled_SQL()
+            if not test_str:
+                exit()
+        vprint("Test: ",test_str)
         start = time.time()
-        result = scikitprocessing.test_mlp()
+        if useCluster:
+            corpus_raw = pd.read_csv(path + "dataset-ib.csv")
+            probaResult = False
+            scikitprocessing.prepare_cluster(corpus_input=corpus,corpus_raw=corpus_raw,path=path,write_corpus=writeCorpus,
+                                             fit_train_model=fitTrainModel,fit_corpus=fitCorpus,verbose=verbose,
+                                             new_data=test_str,cluster_label=True)
+        else:
+            scikitprocessing.prepare(corpus, path, write_corpus=writeCorpus, fit_corpus=fitCorpus,
+                                 fit_train_model=fitTrainModel, partial=partialTrain,
+                                 proba=probaResult, verbose=verbose, new_data=test_str)
         end = time.time()
         elapse = end - start
-        vprint("TEST MLP TIME: {}".format(elapse))
-
-    if result is not None:
-        if probaResult:
-            if headline is not None and content is not None:
-                print(result[0])
-                print(result[1])
-                dataset = pd.DataFrame(data={'category': result[1], 'headline': [headline], 'content': [content]})
-                dataset.to_csv(path + 'dataset-ib.csv',mode='a',header=False,index=False)
-            elif useSQL:
-                for x,y,z in zip(result[1],unc['title'].tolist(),unc['description'].tolist()):
-                    dataset = pd.DataFrame(data={'category': x, 'headline': y, 'content': z}, index=[0])
-                    dataset.to_csv(path + 'dataset-ib.csv', mode='a', header=False, index=False)
-                for a,b in zip(result,unc['post_id'].tolist()):
-                    vprint(a,b)
-                    isNews = False
-                    for category in a:
-                        insertCategory(b,category)
-                        cid = checkCategory(category)
-                        if int(cid) == 4:
-                            isNews = True
-                    if isNews == False:
-                        deleteOthers(b)
-                    news_bot_story.news_bot_story()
-            else:
-                print(result[0])
-                print(result[1])
-        else:
+        vprint("Prepare time: {}".format(elapse))
+        model = None
+        if useCluster:
+            if not fitTrainModel:
+                model = scikitprocessing.load_model(model_name=scikitprocessing.CLUSTER_FILENAME)
+            result = scikitprocessing.cluster(model)
             print(result)
-            if headline is not None and content is not None:
-                dataset = pd.DataFrame(data={'category': [result], 'headline': [headline], 'content': [content]})
-                dataset.to_csv(path + 'dataset-ib.csv',mode='a',header=False,index=False)
-    totalend = time.time()
-    totalelapse = totalend - totalstart
-    vprint("Total python time: {}".format(totalelapse))
+            exit()
+        if useScikitMNB:
+            if not fitTrainModel:
+                model = scikitprocessing.load_model(model_name=scikitprocessing.MNB_FILENAME)
+            result = scikitprocessing.test_mnb(model)
+        if useScikitSVM:
+            if not fitTrainModel:
+                model = scikitprocessing.load_model(model_name=scikitprocessing.SVM_FILENAME)
+            result = scikitprocessing.test_svm(model)
+        if useScikitMLP:
+            start = time.time()
+            if not fitTrainModel:
+                model = scikitprocessing.load_model(model_name=scikitprocessing.MLP_FILENAME)
+            result = scikitprocessing.test_mlp(model)
+            end = time.time()
+            elapse = end - start
+            vprint("TEST MLP TIME: {}".format(elapse))
+
+        if result is not None:
+            if probaResult:
+                if headline is not None and content is not None:
+                    print(result[0])
+                    print(result[1])
+                    dataset = pd.DataFrame(data={'category': result[1], 'headline': [headline], 'content': [content]})
+                    dataset.to_csv(path + 'dataset-ib.csv',mode='a',header=False,index=False)
+                elif useSQL:
+                    for x,y,z in zip(result[1],unc['title'].tolist(),unc['description'].tolist()):
+                        dataset = pd.DataFrame(data={'category': x, 'headline': y, 'content': z}, index=[0])
+                        dataset.to_csv(path + 'dataset-ib.csv', mode='a', header=False, index=False)
+                    for a,b in zip(result,unc['post_id'].tolist()):
+                        vprint(a,b)
+                        isNews = False
+                        for category in a:
+                            insertCategory(b,category)
+                            cid = checkCategory(category)
+                            if int(cid) == 4:
+                                isNews = True
+                        if isNews == False:
+                            deleteOthers(b)
+                        news_bot_story.news_bot_story()
+                else:
+                    print(result[0])
+                    print(result[1])
+                    print(result[2])
+            else:
+                print(result)
+                if headline is not None and content is not None:
+                    dataset = pd.DataFrame(data={'category': [result], 'headline': [headline], 'content': [content]})
+                    dataset.to_csv(path + 'dataset-ib.csv',mode='a',header=False,index=False)
+        totalend = time.time()
+        totalelapse = totalend - totalstart
+        vprint("Total python time: {}".format(totalelapse))
