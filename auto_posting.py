@@ -181,7 +181,7 @@ def get_post_news(row: list):
             for element in post_tuple_list:
                 select_cursor.execute(
                     query,
-                (element[0],element[1],element[2],element[3],element[4],element[5],element[6],element[7],element[9],element[10],element[11],))
+                (element[0],element[1],element[2],element[3],element[4],element[5],element[6],element[7],element[8],element[9],element[10],element[11],))
                 mydb.commit()
                 print("Links posted: " + str(len(post_tuple_list)))
 
