@@ -46,7 +46,7 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
 
         dataset = pd.DataFrame(data={'category': [category[1]], 'headline': [title], 'content': [text_block],
                                      'probabilities': [category[2]],
-                                     'top3': [category[0]]})
+                                     'top3': [category[0]]},columns=['category','headline','content','probabilities','top3'])
         daily_log = daily_log.append(dataset)
         # cat_str = ""
         # cat_str = ",".join(list(map(lambda x: x, category)))
