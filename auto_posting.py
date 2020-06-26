@@ -38,6 +38,54 @@ TIMEOUT = 3000
 timenow = "{}-{}-{}".format(datetime.now().day,datetime.now().month,datetime.now().year)
 daily_log = pd.DataFrame(columns=['category','headline','content','probabilities','top3'])
 
+def translate_category(input:str):
+    if input == "Makanan":
+        return "Food"
+
+    elif input == "Hiburan":
+        return "Entertainment"
+
+    elif input == "Edukasi":
+        return "Education"
+
+    elif input == "Bisnis":
+        return "Business"
+
+    elif input == "Travel":
+        return "Travel"
+
+    elif input == "Berita":
+        return "News"
+
+    elif input == "Lain-Lain":
+        return "Others"
+
+    elif input == "Tren":
+        return "Trending"
+
+    elif input == "Kesehatan":
+        return "Health"
+
+    elif input == "Teknologi":
+        return "Technology"
+
+    elif input == "Gaya Hidup":
+        return "Lifestyle"
+
+    elif input == "Olahraga":
+        return "Sports"
+
+    elif input == "Selebriti":
+        return "Celebrity"
+
+    elif input == "Sains":
+        return "Science"
+
+    elif input == "Lowongan Pekerjaan":
+        return "Jobs"
+
+    elif input == "COVID-19":
+        return "COVID-19"
 
 def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, privacy_flag: int):
     try:
@@ -228,6 +276,9 @@ def get_post_news(row: list):
             query_cat = "replace into CONTENT_CATEGORY(POST_ID,CATEGORY) SELECT %s,ID from CATEGORY where CODE = %s"
             for element in post_cat_tuples:
                 for category in element[1]:
+                    print("Category : {}".format(category))
+                    translated_category = translate_category(category)
+                    print("Category Translate : {}".format(translated_category))
                     select_cursor.execute(
                         query_cat,
                         (element[0],category))
