@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import urllib.parse
+from pathlib import Path
 from datetime import datetime
 from http.client import RemoteDisconnected, IncompleteRead
 from multiprocessing import Process, Manager
@@ -89,6 +90,7 @@ def translate_category(input:str):
 
 def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, privacy_flag: int):
     try:
+        path = str(Path(sys.argv[0]).parent) + str(os.sep)
         global daily_log
         text_block, title, image_src = crawler.crawl_article(url)
         data = [title + " " + text_block]
@@ -114,6 +116,8 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
         summary = textsummarization_baru.summarize_text(text_block.replace("\n", " "), 1.0, 512, 'auto')
         if summary == "[Error] Error in summarizing article." or summary == "[Cannot summarize the article]":
             summary = "-"
+        datasetAll = pd.DataFrame(data={'category': category[1], 'headline': [title], 'content': [summary]})
+        datasetAll.to_csv(path+'dataset-ib.csv', mode='a', header=False, index=False)
         curtime_milli = int(round(time.time() * 1000))
         img_filename = ""
 
