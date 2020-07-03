@@ -309,6 +309,8 @@ def classify(data:list):
     scikitprocessing.prepare(corpus,path,new_data=data)
     model = scikitprocessing.load_model(model_name=scikitprocessing.MLP_FILENAME)
     result = scikitprocessing.test_mlp(model)
+    dataset = pd.DataFrame(data={'category': result[1], 'headline': [headline], 'content': [content]})
+    dataset.to_csv(path + 'dataset-ib.csv', mode='a', header=False, index=False)
     return result
 
 if __name__ == "__main__":
