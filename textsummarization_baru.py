@@ -204,6 +204,117 @@ def summarize_text(input_text:str, max_length_ratio=0.0, max_length_character=0,
         return translated
         # translate_summary = translator.translate(summary,src='en', dest='id')
         # return translate_summary.text
+def summarize_text_en(input_text:str, max_length_ratio=0.0, max_length_character=0, language='auto'):
+    target_ratio = 0.0
+    if(max_length_ratio==0.0 and max_length_character==0):
+        return "[Error] Error in summarizing article."
+    elif max_length_ratio == 0.0:
+        target_ratio = (100.0 * max_length_character) / len(input_text)
+    elif max_length_character == 0:
+        target_ratio = max_length_ratio
+    else:
+        target_ratio = min(max_length_ratio, max_length_character / len(input_text))
+
+    language_true = 'en'
+    # if language == 'auto':
+    #     confidence = translator.detect(input_text)
+    #     if confidence.lang == 'id':
+    #         language_true = 'id'
+    #     else:
+    #         language_true = 'en'
+    # else:
+    #     language_true = language
+    #
+    # if language_true == 'id':
+    #     Stopwords = set(stopwords.words('indonesian'))
+    # else:
+    Stopwords = set(stopwords.words('english'))
+
+    tokenized_sentence = sent_tokenize(input_text)
+    input_text = remove_special_characters(str(input_text))
+    input_text = re.sub(r'\d+', '', input_text)
+    tokenized_words_with_stopwords = word_tokenize(input_text)
+    tokenized_words = [word for word in tokenized_words_with_stopwords if word not in Stopwords]
+    tokenized_words = [word for word in tokenized_words if len(word) > 1]
+    tokenized_words = [word.lower() for word in tokenized_words]
+    tokenized_words = lemmatize_words(tokenized_words)
+    word_freq = freq(tokenized_words)
+    no_of_sentences = int(target_ratio * len(tokenized_sentence))
+    c = 1
+    sentence_with_importance = {}
+    for sent in tokenized_sentence:
+        sentenceimp = sentence_importance(sent, word_freq, tokenized_sentence)
+        sentence_with_importance[c] = sentenceimp
+        c = c + 1
+    sentence_with_importance = sorted(sentence_with_importance.items(), key=operator.itemgetter(1), reverse=True)
+    cnt = 0
+    summary = []
+    sentence_no = []
+    for word_prob in sentence_with_importance:
+        if cnt < no_of_sentences:
+            sentence_no.append(word_prob[0])
+            cnt = cnt + 1
+        else:
+            break
+    sentence_no.sort()
+    cnt = 1
+    n = 1
+    for sentence in tokenized_sentence:
+        if cnt in sentence_no:
+            if len(sentence_no) <= 3:
+                if n == 1:
+                    sentence = "{}||".format(sentence)
+            elif len(sentence_no) >= 4:
+                if n == 2:
+                    sentence = "{}||".format(sentence)
+            summary.append(sentence)
+            n = n + 1
+        cnt = cnt + 1
+    summary = " ".join(summary)
+    if(len(summary)<=0):
+        summary = "[Cannot summarize the article]"
+
+
+    # if language_true == 'en':
+    sentence_split = summary.split("||")
+    summary_stylized = []
+    x = 1
+    for sentence in sentence_split:
+        if "\n\n" in sentence:
+            sentence = sentence.replace("\n\n", ", ")
+
+        if "\n" in sentence:
+            sentence = sentence.replace("\n", ", ")
+        if x == 1:
+            sentence = "<b>{}</b>\n\n".format(sentence)
+        else:
+            sentence = "<i>{}</i>".format(sentence)
+        summary_stylized.append(sentence)
+        x = x + 1
+    summary = "".join(summary_stylized)
+    return summary
+    # else:
+    #     translated = translation.google(summary, from_language='en', to_language='id')
+    #     sentence_split = translated.split("||")
+    #     summary_stylized = []
+    #     x = 1
+    #     for sentence in sentence_split:
+    #         if "\n\n" in sentence:
+    #             sentence = sentence.replace("\n\n", ", ")
+    #
+    #         if "\n" in sentence:
+    #             sentence = sentence.replace("\n", ", ")
+    #
+    #         if x == 1:
+    #             sentence = "<b>{}</b>\n\n".format(sentence)
+    #         else:
+    #             sentence = "<i>{}</i>".format(sentence)
+    #         summary_stylized.append(sentence)
+    #         x = x + 1
+    #     translated = "".join(summary_stylized)
+    #     return translated
+        # translate_summary = translator.translate(summary,src='en', dest='id')
+        # return translate_summary.text
 
 def translate(input:str):
     translated = translation.google(input,from_language='en',to_language='id')
