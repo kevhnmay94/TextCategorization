@@ -1,4 +1,4 @@
-#! /home/easysoft/anaconda3/envs/hoax/bin/python
+#! /home/support/anaconda3/envs/hoax/bin/python
 
 import sys
 import nltk
@@ -11,6 +11,15 @@ import joblib
 
 overwrite = False
 isVerbose = False
+CODE_IB = 0
+CODE_CU = 1
+workdir_ib = "workdir/"
+workdir_cu = "workdir_cu/"
+csv_ib = "hoax.csv"
+csv_cu = "hoax_cu.csv"
+model_ib = "hoax_data.pkl"
+model_cu = "hoax_data_cu.pkl"
+mode = CODE_IB
 
 data = '''
 tenaga medis sebarkan corona dengan suntik
@@ -25,7 +34,10 @@ for i, s in enumerate(sys.argv[1:]):
         arg = s[2:]
         if arg == 'text':
             data = sys.argv[i + 2]
-
+        elif arg == 'IB':
+            mode = CODE_IB
+        elif arg == 'CU':
+            mode = CODE_CU
 
     elif s[0] == '-':
         for arg in s[1:]:
@@ -43,8 +55,6 @@ nltk.download('wordnet')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('stopwords')
 
-
-
 def load_mdl(model_name):
     hoax_data = None
     if not overwrite:
@@ -59,7 +69,15 @@ def main(query,model=None):
         return '{}'.format({'score': 0.00})
     if model is None:
         model = 8*[None]
-        corpus = pd.read_csv("hoax.csv",sep='\t')
+        if mode == CODE_IB:
+            csv = csv_ib
+            workdir = workdir_ib
+            model_name = model_ib
+        else:
+            csv = csv_cu
+            workdir = workdir_cu
+            model_name = model_cu
+        corpus = pd.read_csv(csv,sep='\t')
         title = corpus['title'].tolist()
         model[0] = title
         explanation = corpus['explanation'].tolist()
@@ -68,20 +86,19 @@ def main(query,model=None):
         model[5] = link
         model[7] = corpus['statement'].tolist()
 
-        gen_docs = [[w.lower() for w in word_tokenize(text) if w not in stopwords.words('indonesian') and w.isalnum()] for text in title]
-        # print(gen_docs)
+        gen_docs = [[w.lower() for w in word_tokenize(text) if w not in stopwords.words('indonesian') and w not in stopwords.words('english') and w.isalnum()] for text in title]
         dictionary = gensim.corpora.Dictionary(gen_docs)
         model[1] = dictionary
         bow = [dictionary.doc2bow(gen_doc) for gen_doc in gen_docs]
         model[6] = bow
         tf_idf = gensim.models.TfidfModel(bow)
         model[2] = tf_idf
-        sims = gensim.similarities.Similarity('workdir/',tf_idf[bow],
+        sims = gensim.similarities.Similarity(workdir,tf_idf[bow],
                                                 num_features=len(dictionary))
         model[3] = sims
-        joblib.dump(model,"hoax_data.pkl",compress=9)
+        joblib.dump(model,model_name,compress=9)
 
-    query = [w.lower() for w in word_tokenize(query) if w not in stopwords.words('indonesian') and w.isalnum()]
+    query = [w.lower() for w in word_tokenize(query) if w not in stopwords.words('indonesian') and w not in stopwords.words('english') and w.isalnum()]
     query_bow = model[1].doc2bow(query)
 
     query_tf_idf = model[2][query_bow]
@@ -101,7 +118,7 @@ def main(query,model=None):
         vprint([[model[1][id], np.around(freq, decimals=2)] for id, freq in doc])
         vprint(article[0])
         vprint(explanation[0])
-        return '{}'.format({'score': score[0], 'article': article[0], 'explanation': explanation[0], 'link': link[0] })
+        return '{}'.format({'score': score[0], 'query': query, 'article': article[0], 'explanation': explanation[0], 'link': link[0] })
     else:
         vprint("aman bos")
         vprint(article[0])
@@ -109,9 +126,13 @@ def main(query,model=None):
             s = 1 - score[0]
         else:
             s = score[0]
-        return '{}'.format({'score': s})
+        return '{}'.format({'score': s, 'query': query,})
 
 
 if __name__ == '__main__':
-    model = load_mdl("hoax_data.pkl")
+    if mode == CODE_IB:
+        model_name = model_ib
+    else:
+        model_name = model_cu
+    model = load_mdl(model_name)
     print(main(data,model))
