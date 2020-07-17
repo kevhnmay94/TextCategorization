@@ -1,13 +1,18 @@
 import math
 import operator
 import re
-
+import os
+import sys
 import nltk
 import translators as translation
 from googletrans import Translator
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import sent_tokenize, word_tokenize
+from pathlib import Path
+from tika import parser
+import docx
+from datetime import datetime, timedelta, time
 
 # nltk.download('stopwords')
 # nltk.download('punkt')
@@ -584,3 +589,58 @@ def detect_language(input:str):
 #     translate_text = translator.translate(output, dest='en')
 #     print(title)
 #     print(translate_text.text)
+def main():
+    url = ""
+
+    finaltext = ""
+    summary = ""
+    extension = ""
+
+    for i, s in enumerate(sys.argv[1:]):
+        if s[:2] == '--':
+            arg = s[2:]
+            if arg == 'file':
+                url = sys.argv[i + 2]
+
+    if not url:
+        print("[Error] URI can't be empty")
+        exit()
+
+    path = Path(url)
+    extension = path.suffix
+    if path.suffix == '.txt':
+        text = open(url,'r+')
+        # data = len(text.readlines())
+        data = text.readlines()
+        for x in data:
+            if len(x) > 1:
+                finaltext = finaltext + " " + x.strip()
+
+    elif path.suffix == '.docx':
+        doc = docx.Document(url)
+        for x in range(len(doc.paragraphs)):
+            if len(doc.paragraphs[x].text) > 0:
+                finaltext = finaltext + " " + doc.paragraphs[x].text.strip()
+
+    elif path.suffix == '.pdf':
+        rawtext = parser.from_file(url)
+
+        rawList = rawtext['content'].splitlines()
+        for text in rawList:
+            if len(text) > 1:
+                finaltext = finaltext + " " + text.strip()
+
+    detect = detect_language(finaltext)
+    if detect.lang == "id":
+        summary = summarize_text_nohtml(finaltext.replace("\n", " "), 1.0, 750, 'auto')
+    else:
+        summary = summarize_text_en_nohtml(finaltext.replace("\n", " "), 1.0, 750, 'auto')
+    true_file = os.path.splitext(os.path.basename(url))[0]
+    time_now = datetime.now().timestamp() * 1000
+    filename = "{}_{}_{}_{}".format("SUM",time_now,true_file,"summarization.txt")
+    filex = open(filename, "w+")
+    filex.write(summary)
+    filex.close()
+
+if __name__ == "__main__":
+    main()
