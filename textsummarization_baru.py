@@ -10,9 +10,10 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import sent_tokenize, word_tokenize
 from pathlib import Path
-from tika import parser
 import docx
 from datetime import datetime, timedelta, time
+import mysql.connector
+import pdfplumber
 
 # nltk.download('stopwords')
 # nltk.download('punkt')
@@ -109,20 +110,21 @@ def summarize_text(input_text:str, max_length_ratio=0.0, max_length_character=0,
     else:
         target_ratio = min(max_length_ratio, max_length_character / len(input_text))
 
+    print("Input text: ",input_text)
     language_true = 'en'
-    if language == 'auto':
-        confidence = translator.detect(input_text)
-        if confidence.lang == 'id':
-            language_true = 'id'
-        else:
-            language_true = 'en'
-    else:
-        language_true = language
-
-    if language_true == 'id':
-        Stopwords = set(stopwords.words('indonesian'))
-    else:
-        Stopwords = set(stopwords.words('english'))
+    # if language == 'auto':
+    #     confidence = translator.detect(input_text)
+    #     if confidence.lang == 'id':
+    #         language_true = 'id'
+    #     else:
+    #         language_true = 'en'
+    # else:
+    #     language_true = language
+    #
+    # if language_true == 'id':
+    #     Stopwords = set(stopwords.words('indonesian'))
+    # else:
+    Stopwords = set(stopwords.words('english'))
 
     tokenized_sentence = sent_tokenize(input_text)
     input_text = remove_special_characters(str(input_text))
@@ -167,46 +169,67 @@ def summarize_text(input_text:str, max_length_ratio=0.0, max_length_character=0,
     summary = " ".join(summary)
     if(len(summary)<=0):
         summary = "[Cannot summarize the article]"
+    print("SUMMARY: ",summary)
+    sentence_split = summary.split("||")
+    print("Sentence split language id true: ", sentence_split)
+    summary_stylized = []
+    x = 1
+    for sentence in sentence_split:
+        if "\n\n" in sentence:
+            sentence = sentence.replace("\n\n", ", ")
 
+        if "\n" in sentence:
+            sentence = sentence.replace("\n", ", ")
+        if x == 1:
+            sentence = "<b>{}</b>\n\n".format(sentence)
+        else:
+            sentence = "<i>{}</i>".format(sentence)
+        summary_stylized.append(sentence)
+        x = x + 1
+    summary = "".join(summary_stylized)
+    return summary
 
-    if language_true == 'id':
-        sentence_split = summary.split("||")
-        summary_stylized = []
-        x = 1
-        for sentence in sentence_split:
-            if "\n\n" in sentence:
-                sentence = sentence.replace("\n\n", ", ")
-
-            if "\n" in sentence:
-                sentence = sentence.replace("\n", ", ")
-            if x == 1:
-                sentence = "<b>{}</b>\n\n".format(sentence)
-            else:
-                sentence = "<i>{}</i>".format(sentence)
-            summary_stylized.append(sentence)
-            x = x + 1
-        summary = "".join(summary_stylized)
-        return summary
-    else:
-        translated = translation.google(summary, from_language='en', to_language='id')
-        sentence_split = translated.split("||")
-        summary_stylized = []
-        x = 1
-        for sentence in sentence_split:
-            if "\n\n" in sentence:
-                sentence = sentence.replace("\n\n", ", ")
-
-            if "\n" in sentence:
-                sentence = sentence.replace("\n", ", ")
-
-            if x == 1:
-                sentence = "<b>{}</b>\n\n".format(sentence)
-            else:
-                sentence = "<i>{}</i>".format(sentence)
-            summary_stylized.append(sentence)
-            x = x + 1
-        translated = "".join(summary_stylized)
-        return translated
+    # if language_true == 'id':
+    #     sentence_split = summary.split("||")
+    #     print("Sentence split language id true: ",sentence_split)
+    #     summary_stylized = []
+    #     x = 1
+    #     for sentence in sentence_split:
+    #         if "\n\n" in sentence:
+    #             sentence = sentence.replace("\n\n", ", ")
+    #
+    #         if "\n" in sentence:
+    #             sentence = sentence.replace("\n", ", ")
+    #         if x == 1:
+    #             sentence = "<b>{}</b>\n\n".format(sentence)
+    #         else:
+    #             sentence = "<i>{}</i>".format(sentence)
+    #         summary_stylized.append(sentence)
+    #         x = x + 1
+    #     summary = "".join(summary_stylized)
+    #     return summary
+    # else:
+    #     translated = translation.bing(summary, from_language='en', to_language='id')
+    #     print("Translated: ",translated)
+    #     sentence_split = translated.split("||")
+    #     print("Sentence split: ",sentence_split)
+    #     summary_stylized = []
+    #     x = 1
+    #     for sentence in sentence_split:
+    #         if "\n\n" in sentence:
+    #             sentence = sentence.replace("\n\n", ", ")
+    #
+    #         if "\n" in sentence:
+    #             sentence = sentence.replace("\n", ", ")
+    #
+    #         if x == 1:
+    #             sentence = "<b>{}</b>\n\n".format(sentence)
+    #         else:
+    #             sentence = "<i>{}</i>".format(sentence)
+    #         summary_stylized.append(sentence)
+    #         x = x + 1
+    #     translated = "".join(summary_stylized)
+    #     return translated
         # translate_summary = translator.translate(summary,src='en', dest='id')
         # return translate_summary.text
 def summarize_text_en(input_text:str, max_length_ratio=0.0, max_length_character=0, language='auto'):
@@ -410,7 +433,7 @@ def summarize_text_nohtml(input_text:str, max_length_ratio=0.0, max_length_chara
         summary = "".join(summary_stylized)
         return summary
     else:
-        translated = translation.google(summary, from_language='en', to_language='id')
+        translated = translation.bing(summary, from_language='en', to_language='id')
         sentence_split = translated.split("||")
         summary_stylized = []
         x = 1
@@ -543,7 +566,7 @@ def summarize_text_en_nohtml(input_text:str, max_length_ratio=0.0, max_length_ch
         # translate_summary = translator.translate(summary,src='en', dest='id')
         # return translate_summary.text
 def translate(input:str):
-    translated = translation.google(input,from_language='en',to_language='id')
+    translated = translation.bing(input,from_language='en',to_language='id')
     return translated
 def detect_language(input:str):
     detection = translator.detect(input)
@@ -599,17 +622,34 @@ def main():
     for i, s in enumerate(sys.argv[1:]):
         if s[:2] == '--':
             arg = s[2:]
-            if arg == 'file':
+            if arg == 'postid':
                 url = sys.argv[i + 2]
 
     if not url:
-        print("[Error] URI can't be empty")
+        print("[Error] post_id can't be empty")
         exit()
+    with open("/apps/indonesiabisa/TextCategorization/database.txt") as f:
+        props = [line.rstrip() for line in f]
 
-    path = Path(url)
-    extension = path.suffix
+    mydb = mysql.connector.connect(
+        host=props[0],
+        user=props[1],
+        passwd=props[2],
+        database=props[3]
+    )
+    select_cursor = mydb.cursor()
+    query_check = "select file_id from POST where post_id = %s"
+    select_cursor.execute(query_check, (url,))
+    post = select_cursor.fetchall()
+    file_id = ""
+    for posts in post:
+        file_id = posts[0]
+
+    file_id = "/apps/indonesiabisa/server/image/{}".format(file_id)
+
+    path = Path(file_id)
     if path.suffix == '.txt':
-        text = open(url,'r+')
+        text = open(file_id,'r+')
         # data = len(text.readlines())
         data = text.readlines()
         for x in data:
@@ -617,30 +657,46 @@ def main():
                 finaltext = finaltext + " " + x.strip()
 
     elif path.suffix == '.docx':
-        doc = docx.Document(url)
+        doc = docx.Document(file_id)
         for x in range(len(doc.paragraphs)):
             if len(doc.paragraphs[x].text) > 0:
                 finaltext = finaltext + " " + doc.paragraphs[x].text.strip()
 
     elif path.suffix == '.pdf':
-        rawtext = parser.from_file(url)
-
-        rawList = rawtext['content'].splitlines()
-        for text in rawList:
-            if len(text) > 1:
-                finaltext = finaltext + " " + text.strip()
+        # rawtext = parser.from_file(file_id)
+        #
+        # rawList = rawtext['content'].splitlines()
+        # for text in rawList:
+        #     if len(text) > 1:
+        #         finaltext = finaltext + " " + text.strip()
+        pdf = pdfplumber.open(file_id)
+        for x in range(len(pdf.pages)):
+            page = pdf.pages[x]
+            finaltext = finaltext + "\n" +page.extract_text()
+        pdf.close()
+    else:
+        print("[Error] File extension not supported")
+        exit()
 
     detect = detect_language(finaltext)
     if detect.lang == "id":
         summary = summarize_text_nohtml(finaltext.replace("\n", " "), 1.0, 750, 'auto')
     else:
         summary = summarize_text_en_nohtml(finaltext.replace("\n", " "), 1.0, 750, 'auto')
-    true_file = os.path.splitext(os.path.basename(url))[0]
-    time_now = datetime.now().timestamp() * 1000
+    true_file = os.path.splitext(os.path.basename(file_id))[0]
+    time_now = round(datetime.now().timestamp() * 1000)
     filename = "{}_{}_{}_{}".format("SUM",time_now,true_file,"summarization.txt")
-    filex = open(filename, "w+")
+    full_filename = "/apps/indonesiabisa/server/image/{}".format(filename)
+    filex = open(full_filename, "w+")
     filex.write(summary)
     filex.close()
+
+    query = "UPDATE POST SET FILE_SUMMARIZATION = %s , LAST_UPDATE = NOW(), LAST_EDIT = NOW() where POST_ID = %s "
+    select_cursor.execute(
+        query,
+        (filename, url,))
+
+    mydb.commit()
 
 if __name__ == "__main__":
     main()

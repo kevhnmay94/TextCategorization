@@ -114,7 +114,7 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
 
         datasetAll = pd.DataFrame(data={'category': category[1], 'headline': [title], 'content': [text_block]})
         datasetAll.to_csv(path+'dataset-ib.csv', mode='a', header=False, index=False)
-        title = textsummarization_baru.translate(title)
+        # title = textsummarization_baru.translate(title)
         summary = textsummarization_baru.summarize_text(text_block.replace("\n", " "), 1.0, 512, 'auto')
         if summary == "[Error] Error in summarizing article." or summary == "[Cannot summarize the article]":
             summary = "-"
@@ -285,7 +285,8 @@ def get_post_news(row: list):
                     print("Category Translate : {}".format(translated_category))
                     select_cursor.execute(
                         query_cat,
-                        (element[0],category))
+                        (element[0],translated_category))
+                    print("Success Insert to Content Category")
                     # mydb.commit()
 
             print(post_tuple_list)
