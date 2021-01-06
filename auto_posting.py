@@ -114,10 +114,13 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
 
         datasetAll = pd.DataFrame(data={'category': category[1], 'headline': [title], 'content': [text_block]})
         datasetAll.to_csv(path+'dataset-ib.csv', mode='a', header=False, index=False)
-        # title = textsummarization_baru.translate(title)
-        summary = textsummarization_baru.summarize_text(text_block.replace("\n", " "), 1.0, 512, 'auto')
+        title_id = textsummarization_baru.translate(title)
+        title_2 = "(en){}(/en)||(id){}(/id)".format(title,title_id)
+        summary = textsummarization_baru.summarize_text_en(text_block.replace("\n", " "), 1.0, 512, 'auto')
+        summary_id = textsummarization_baru.summarize_text_id(text_block.replace("\n", " "), 1.0, 512, 'auto')
+        summary_2 = "(en){}(/en)||(id){}(/id)".format(summary,summary_id)
         if summary == "[Error] Error in summarizing article." or summary == "[Cannot summarize the article]":
-            summary = "-"
+            summary_2 = "-"
         curtime_milli = int(round(time.time() * 1000))
         img_filename = ""
 
@@ -187,7 +190,7 @@ def retrieve_post_tuple(url: str, post_list: list, unique_id: int, f_pin: str, p
         post_id = f_pin + str(curtime_milli) + str(unique_id)
         if category:
             post_values = (
-                post_id, f_pin, urllib.parse.quote_plus(title), urllib.parse.quote_plus(summary), curtime_milli,
+                post_id, f_pin, urllib.parse.quote_plus(title_2), urllib.parse.quote_plus(summary_2), curtime_milli,
                 privacy_flag,
                 img_filename,
                 img_filename, curtime_milli, url, 1, curtime_milli,category[0])
