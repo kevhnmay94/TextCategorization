@@ -16,6 +16,11 @@ import pymysql.cursors
 import urllib.parse
 import news_bot_story
 
+with open("status.txt") as s:
+    first_line = s.readline().rstrip()
+    if first_line == "0":
+        exit()
+
 verbose = False
 
 def vprint(*data):
